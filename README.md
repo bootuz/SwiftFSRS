@@ -10,7 +10,6 @@ Swift FSRS is a native Swift package that implements the FSRS-6 spaced repetitio
 
 - ✅ Complete FSRS-6 algorithm implementation
 - ✅ Protocol-oriented design - works with your own card types
-- ✅ Generic type system for type safety
 - ✅ Card scheduling with learning steps support (BasicScheduler)
 - ✅ Long-term scheduling without learning steps (LongTermScheduler)
 - ✅ Reschedule functionality for replaying review history
@@ -19,7 +18,7 @@ Swift FSRS is a native Swift package that implements the FSRS-6 spaced repetitio
 - ✅ Retrievability calculation (formatted and numeric)
 - ✅ Customizable strategies (seed, learning steps)
 - ✅ Parameter migration support (FSRS-4/5/6 compatibility)
-- ✅ Comprehensive logging support with FSRSLogger protocol
+- ✅ Logging support with FSRSLogger protocol
 
 ## Installation
 
@@ -235,8 +234,6 @@ This is a complete, production-ready implementation of FSRS-6 for Swift. All cor
 - ✅ Short-term and long-term scheduling modes
 - ✅ Protocol-based generic design for flexibility
 - ✅ Comprehensive test suite with 125+ tests
-- ✅ Type-safe value objects for domain values
-- ✅ Service-oriented architecture for clean separation of concerns
 
 ## Contributing
 
