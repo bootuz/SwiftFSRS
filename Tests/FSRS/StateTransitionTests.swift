@@ -49,7 +49,7 @@ struct StateTransitionTests {
     
     @Test("New + Hard → Learning")
     func testNewToLearningWithHard() throws {
-        let f = createFSRS()
+        let f = createFSRS(enableShortTerm: true)
         let card = createCard(state: .new)
         
         let result = try f.next(card: card, now: Date(), grade: .hard)
@@ -288,7 +288,7 @@ struct StateTransitionTests {
     
     @Test("Lapses do not increment on Learning failure")
     func testLapsesNotIncrementOnLearningFailure() throws {
-        let f = createFSRS()
+        let f = createFSRS(enableShortTerm: true)
         let card = TestCard(
             question: "Test",
             answer: "Test",
@@ -347,7 +347,7 @@ struct StateTransitionTests {
     
     @Test("Easy rating produces highest stability")
     func testEasyProducesHighestStability() throws {
-        let f = createFSRS()
+        let f = createFSRS(enableShortTerm: true)
         let card = createCard(state: .review)
         
         let recordLog = try f.repeat(card: card, now: Date())

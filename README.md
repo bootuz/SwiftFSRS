@@ -241,6 +241,7 @@ This is a complete, production-ready implementation of FSRS-6 for Swift. All cor
 ## Contributing
 
 Contributions are welcome! Please ensure:
+- All changes are made throug forked repository
 - Code follows Swift style guidelines
 - Tests are added for new features
 - Documentation is updated
