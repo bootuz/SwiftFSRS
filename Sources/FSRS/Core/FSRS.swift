@@ -187,7 +187,7 @@ public struct FSRS<Card: FSRSCard> {
     ///   - reviews: Review history
     ///   - options: Reschedule options
     /// - Returns: Reschedule result
-    /// - Throws: FSRSAlgorithmError if any operation fails
+    /// - Throws: FSRSError if any operation fails
     public func reschedule(
         currentCard: Card,
         reviews: [FSRSHistory],
@@ -207,7 +207,7 @@ public struct FSRS<Card: FSRSCard> {
             filteredReviews = filteredReviews.filter { $0.rating != .manual }
         }
         
-        let rescheduleService = Reschedule<Card>(fsrs: self, logger: logger)
+        let rescheduleService = RescheduleService<Card>(fsrs: self, logger: logger)
         
         // Use firstCard or create empty from currentCard
         var emptyCard = currentCard

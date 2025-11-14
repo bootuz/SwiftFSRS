@@ -23,19 +23,19 @@ public protocol SchedulerProtocol {
     /// Handle new state
     /// - Parameter grade: Grade rating
     /// - Returns: Record log item
-    /// - Throws: FSRSAlgorithmError if any operation fails
+    /// - Throws: FSRSError if any operation fails
     func newState(grade: Rating) throws -> RecordLogItem<Card>
     
     /// Handle learning/relearning state
     /// - Parameter grade: Grade rating
     /// - Returns: Record log item
-    /// - Throws: FSRSAlgorithmError if any operation fails
+    /// - Throws: FSRSError if any operation fails
     func learningState(grade: Rating) throws -> RecordLogItem<Card>
     
     /// Handle review state
     /// - Parameter grade: Grade rating
     /// - Returns: Record log item
-    /// - Throws: FSRSAlgorithmError if any operation fails
+    /// - Throws: FSRSError if any operation fails
     func reviewState(grade: Rating) throws -> RecordLogItem<Card>
     
     /// Build review log
@@ -57,7 +57,7 @@ public extension SchedulerProtocol {
     
     /// Preview all rating scenarios
     /// - Returns: Record log with all grades
-    /// - Throws: FSRSAlgorithmError if any operation fails
+    /// - Throws: FSRSError if any operation fails
     func preview() throws -> RecordLog<Card> {
         return [
             .again: try review(grade: .again),
@@ -70,7 +70,7 @@ public extension SchedulerProtocol {
     /// Review with specific grade
     /// - Parameter grade: Grade rating
     /// - Returns: Record log item
-    /// - Throws: FSRSAlgorithmError if any operation fails
+    /// - Throws: FSRSError if any operation fails
     func review(grade: Rating) throws -> RecordLogItem<Card> {
         try checkGrade(grade)
         
