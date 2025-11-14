@@ -190,7 +190,7 @@ public struct FSRS<Card: FSRSCard> {
     /// - Throws: FSRSAlgorithmError if any operation fails
     public func reschedule(
         currentCard: Card,
-        reviews: [FSRSHistory] = [],
+        reviews: [FSRSHistory],
         options: RescheduleOptions<Card> = RescheduleOptions<Card>()
     ) throws -> RescheduleResult<Card> {
         logger?.debug("Rescheduling card with \(reviews.count) reviews")

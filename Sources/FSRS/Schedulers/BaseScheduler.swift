@@ -140,9 +140,15 @@ open class BaseScheduler<Card: FSRSCard>: SchedulerProtocol {
             grade: grade
         )
         
-        // Calculate next stability based on grade
+        // Calculate next stability based on grade and elapsed time
         let nextStability: Stability
-        if grade == .again {
+        if elapsedDaysParam.value == 0 && algorithm.parameters.enableShortTerm {
+            // For same-day reviews with short-term enabled, use short-term stability
+            nextStability = try stabilityCalculator.nextShortTermStability(
+                stability: currentStability,
+                grade: grade
+            )
+        } else if grade == .again {
             // For "Again", use forget stability
             nextStability = try stabilityCalculator.nextForgetStability(
                 difficulty: currentDifficulty,

@@ -2,13 +2,12 @@ import Testing
 import Foundation
 @testable import FSRS
 
-/// Test suite for FSRS state transitions and state machine behavior
 @Suite("State Transition Tests")
 struct StateTransitionTests {
     
     // MARK: - Helper Functions
     
-    private func createFSRS(enableShortTerm: Bool = true) -> FSRS<TestCard> {
+    private func createFSRS(enableShortTerm: Bool = false) -> FSRS<TestCard> {
         let params = PartialFSRSParameters(
             enableFuzz: false,
             enableShortTerm: enableShortTerm
@@ -30,16 +29,22 @@ struct StateTransitionTests {
     
     // MARK: - New State Transitions
     
-    @Test("New + Again → Learning")
-    func testNewToLearningWithAgain() throws {
-        let f = createFSRS()
+    
+    @Test("New + Again → Learning", arguments: [
+        (false, State.review),
+        (true, State.learning)
+    ])
+    func testNewToLearningWithAgain(enableShortTirm: Bool, state: State) throws {
+        let f = createFSRS(enableShortTerm: enableShortTirm)
         let card = createCard(state: .new)
         
         let result = try f.next(card: card, now: Date(), grade: .again)
         
-        #expect(result.card.state == .learning)
+        #expect(result.card.state == state)
         #expect(result.card.reps == 1)
         #expect(result.card.lapses == 0)
+        #expect(result.card.stability > 0.21)
+        #expect(result.card.difficulty > 6.41)
     }
     
     @Test("New + Hard → Learning")
@@ -116,8 +121,8 @@ struct StateTransitionTests {
             question: "Test",
             answer: "Test",
             state: .learning,
-            stability: 1.0,
-            difficulty: 5.0,
+            stability: 0.21,
+            difficulty: 6.41,
             learningSteps: 0,
             reps: 1
         )
@@ -125,7 +130,9 @@ struct StateTransitionTests {
         let result = try f.next(card: card, now: Date(), grade: .good)
         
         // Should progress in learning or graduate
+        #expect(result.card.state == .review)
         #expect(result.card.reps == 2)
+        #expect(result.card.difficulty < card.difficulty)
         #expect(result.card.stability > card.stability)
     }
     

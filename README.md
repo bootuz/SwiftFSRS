@@ -9,12 +9,17 @@ Swift FSRS is a native Swift package that implements the FSRS-6 spaced repetitio
 ## Features
 
 - ✅ Complete FSRS-6 algorithm implementation
-- ✅ Card scheduling with learning steps support
+- ✅ Protocol-oriented design - works with your own card types
+- ✅ Generic type system for type safety
+- ✅ Card scheduling with learning steps support (BasicScheduler)
+- ✅ Long-term scheduling without learning steps (LongTermScheduler)
 - ✅ Reschedule functionality for replaying review history
 - ✅ Rollback capability to undo reviews
 - ✅ Forget functionality to reset cards
-- ✅ Customizable strategies (seed, learning steps, scheduler)
+- ✅ Retrievability calculation (formatted and numeric)
+- ✅ Customizable strategies (seed, learning steps)
 - ✅ Parameter migration support (FSRS-4/5/6 compatibility)
+- ✅ Comprehensive logging support with FSRSLogger protocol
 
 ## Installation
 
@@ -35,31 +40,79 @@ Or add it via Xcode:
 
 ## Usage
 
+### Implementing FSRSCard Protocol
+
+First, create a card type that conforms to the `FSRSCard` protocol:
+
+```swift
+import FSRS
+
+struct Flashcard: FSRSCard {
+    // Your custom properties
+    let id: UUID
+    var question: String
+    var answer: String
+    
+    // FSRS required properties
+    var due: Date
+    var state: State
+    var lastReview: Date?
+    var stability: Double
+    var difficulty: Double
+    var scheduledDays: Int
+    var learningSteps: Int
+    var reps: Int
+    var lapses: Int
+    
+    init(question: String, answer: String) {
+        self.id = UUID()
+        self.question = question
+        self.answer = answer
+        
+        // Initialize FSRS properties for new card
+        self.due = Date()
+        self.state = .new
+        self.lastReview = nil
+        self.stability = 0
+        self.difficulty = 0
+        self.scheduledDays = 0
+        self.learningSteps = 0
+        self.reps = 0
+        self.lapses = 0
+    }
+}
+```
+
 ### Basic Example
 
 ```swift
 import FSRS
 
-// Create FSRS instance with default parameters
-let f = fsrs()
+// Create FSRS instance with default parameters (specify your card type)
+let f = fsrs<Flashcard>()
 
-// Create an empty card
-let card = createEmptyCard()
+// Create a new card
+let card = Flashcard(question: "What is the capital of France?", answer: "Paris")
 let now = Date()
 
 // Preview all rating scenarios
-let recordLog = f.repeat(card: CardInput(from: card), now: .date(now))
+let recordLog = try f.repeat(card: card, now: now)
 
 // Get card for a specific rating
 let goodCard = recordLog[.good]!.card
 let goodLog = recordLog[.good]!.log
 
 // Review with a specific grade
-let nextCard = f.next(card: CardInput(from: card), now: .date(now), grade: .good)
+let result = try f.next(card: card, now: now, grade: .good)
+let nextCard = result.card
 
-// Get retrievability
-let retrievability = f.getRetrievability(card: CardInput(from: card), now: .date(now), format: true)
+// Get retrievability as formatted string
+let retrievability = f.getRetrievability(card: card, now: now)
 print(retrievability) // "90.00%"
+
+// Get retrievability as numeric value
+let retrievabilityValue = f.getRetrievabilityValue(card: card, now: now)
+print(retrievabilityValue) // 0.9
 ```
 
 ### Custom Parameters
@@ -71,79 +124,125 @@ let params = PartialFSRSParameters(
     enableFuzz: true,
     enableShortTerm: true
 )
-let f = fsrs(params: params)
+let f = fsrs<Flashcard>(params: params)
 ```
 
 ### Reschedule with History
 
+Replay a card's review history to recalculate its state:
+
 ```swift
+let now = Date()
 let reviews: [FSRSHistory] = [
-    FSRSHistory(rating: .good, review: .date(Date())),
-    FSRSHistory(rating: .good, review: .date(Date().addingTimeInterval(86400))),
-    FSRSHistory(rating: .again, review: .date(Date().addingTimeInterval(172800)))
+    FSRSHistory(rating: .good, review: now),
+    FSRSHistory(rating: .good, review: now.addingTimeInterval(86400)),
+    FSRSHistory(rating: .again, review: now.addingTimeInterval(172800))
 ]
 
-let result = f.reschedule(
-    currentCard: CardInput(from: card),
-    reviews: reviews
+let options = RescheduleOptions<Flashcard>(
+    updateMemoryState: true,
+    now: Date()
+)
+
+let result = try f.reschedule(
+    currentCard: card,
+    reviews: reviews,
+    options: options
 )
 
 print(result.collections.count) // Number of replayed reviews
+if let rescheduleItem = result.rescheduleItem {
+    let updatedCard = rescheduleItem.card
+}
 ```
 
 ### Rollback
 
+Undo a review and restore the card to its previous state:
+
 ```swift
-let previousCard = f.rollback(
-    card: CardInput(from: currentCard),
-    log: ReviewLogInput(from: reviewLog)
-)
+// After reviewing a card, you get a RecordLogItem
+let result = try f.next(card: card, now: Date(), grade: .good)
+let currentCard = result.card
+let reviewLog = result.log
+
+// Rollback to previous state
+let previousCard = try f.rollback(card: currentCard, log: reviewLog)
+```
+
+### Forget Card
+
+Reset a card back to the new state:
+
+```swift
+let forgottenResult = f.forget(card: card, now: Date(), resetCount: false)
+let newCard = forgottenResult.card
+// Card is now in .new state with reset stability and difficulty
 ```
 
 ## Architecture
 
 The package is organized into the following modules:
 
-- **Models**: Core data structures (Card, ReviewLog, Parameters, Enums)
-- **Core**: Main algorithm (FSRSAlgorithm, FSRS) and parameter management
-- **Schedulers**: Scheduling logic (BasicScheduler, LongTermScheduler)
+### Core Components
+- **Models**: Core data structures (ReviewLog, Parameters, Enums, ValueObjects)
+- **Protocols**: Protocol definitions (FSRSCard, AlgorithmProtocols, SchedulerProtocol)
+- **Core**: Main algorithm (FSRSAlgorithm, FSRS, Factory) and parameter management
+- **Schedulers**: Scheduling logic (BasicScheduler, LongTermScheduler, BaseScheduler)
+- **Calculators**: Separate calculators for stability, difficulty, and intervals
+
+### Features
 - **Strategies**: Extensible strategy system (seed, learning steps)
-- **Utilities**: Helper functions (TypeConverter, DateHelpers, MathHelpers, Alea PRNG)
-- **Features**: Advanced features (Reschedule)
+- **Features**: Advanced features (Reschedule, RetrievabilityService, CardStateService)
+- **Utilities**: Helper functions (DateHelpers, MathHelpers, Alea PRNG, FSRSLogger)
 
-## Algorithm Precision
+### Design Patterns
+- **Protocol-Oriented**: Use `FSRSCard` protocol to work with your own card types
+- **Generic Types**: FSRS is generic over any card type conforming to FSRSCard
+- **Value Objects**: Type-safe wrappers for domain values (Stability, Difficulty, etc.)
+- **Service Layer**: Separate services for retrievability, card state, and rescheduling
 
-The implementation maintains numerical precision matching the TypeScript version. All calculations use `Double` precision with rounding to 8 decimal places (matching TypeScript's `.toFixed(8)`).
-
-## Platform Support
-
-- iOS 13+
-- macOS 10.15+
-- watchOS 6+
-- tvOS 13+
 
 ## Swift Version
 
 Requires Swift 5.9+
 
-## License
+## Testing
 
-MIT License - same as ts-fsrs
+- **State Transition Tests**: Verify correct state machine behavior for all card states
+- **Parameter Tests**: Test parameter validation, migration, and clipping
+- **Integration Tests**: End-to-end testing of complete workflows
+- **API Tests**: Verify all public API methods work correctly
+
+How to run tests:
+
+```bash
+swift test
+```
+
+Run specific test suites:
+
+```bash
+swift test --filter StateTransitionTests
+swift test --filter IntegrationTests
+```
 
 ## Status
 
-This is a complete port of ts-fsrs v5.2.3. All core functionality has been implemented. Unit tests and integration tests are pending (see TODO list).
+This is a complete, production-ready implementation of FSRS-6 for Swift. All core functionality has been implemented and tested:
+
+- ✅ Complete FSRS-6 algorithm with all formulas
+- ✅ Short-term and long-term scheduling modes
+- ✅ Protocol-based generic design for flexibility
+- ✅ Comprehensive test suite with 125+ tests
+- ✅ Type-safe value objects for domain values
+- ✅ Service-oriented architecture for clean separation of concerns
 
 ## Contributing
 
 Contributions are welcome! Please ensure:
 - Code follows Swift style guidelines
 - Tests are added for new features
-- Numerical precision matches TypeScript implementation
 - Documentation is updated
 
-## Related Projects
-
-- [ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs) - TypeScript implementation
-- [fsrs-rs](https://github.com/open-spaced-repetition/fsrs-rs) - Rust implementation
 
