@@ -1,5 +1,7 @@
 # Swift FSRS
 
+[![Swift](https://github.com/bootuz/SwiftFSRS/actions/workflows/swift.yml/badge.svg)](https://github.com/bootuz/SwiftFSRS/actions/workflows/swift.yml)
+
 A Swift implementation of the Free Spaced Repetition Scheduler (FSRS-6) algorithm.
 
 ## Overview

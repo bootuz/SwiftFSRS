@@ -6,16 +6,16 @@ import PackageDescription
 let package = Package(
     name: "FSRS",
     platforms: [
-        .iOS(.v13),
-        .macOS(.v10_15),
-        .watchOS(.v6),
-        .tvOS(.v13)
+        .iOS(.v16),
+        .macOS(.v13),
+        .watchOS(.v9),
+        .tvOS(.v16),
     ],
     products: [
         .library(
             name: "FSRS",
             targets: ["FSRS"]
-        ),
+        )
     ],
     dependencies: [],
     targets: [
@@ -31,4 +31,3 @@ let package = Package(
         ),
     ]
 )
-

@@ -1,9 +1,3 @@
-//
-//  .gitignore
-//  FSRS
-//
-//  Created by Astemir Boziev on 14.11.25.
-//
-
 .swiftpm/
 .build/
+.DS_Store

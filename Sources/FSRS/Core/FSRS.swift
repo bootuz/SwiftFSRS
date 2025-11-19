@@ -4,33 +4,39 @@ import Foundation
 /// Generic over any type conforming to FSRSCard protocol
 public struct FSRS<Card: FSRSCard> {
     // MARK: - Properties
-    
+
     /// Internal algorithm implementation
     private var algorithm: FSRSAlgorithmProtocol
-    
+
     /// Whether to use short-term scheduler (with learning steps)
     private let useShortTerm: Bool
-    
+
     /// Optional logger for debugging and monitoring
     private let logger: (any FSRSLogger)?
-    
+
     /// Service for calculating retrievability
     private let retrievabilityService: RetrievabilityService
-    
+
     /// Service for card state operations (rollback, forget)
     private let cardStateService: CardStateService<Card>
-    
+
+    /// Factory for creating schedulers
+    private let schedulerFactory: any SchedulerFactory<Card>
+
     // MARK: - Initialization
-    
+
     /// Initialize FSRS with parameters
     /// - Parameters:
     ///   - params: Partial FSRS parameters
     ///   - randomProvider: Random provider (optional, uses system random if not provided)
     ///   - logger: Optional logger for debugging and monitoring
+    ///   - logger: Optional logger for debugging and monitoring
+    ///   - schedulerFactory: Optional scheduler factory (defaults to FSRSSchedulerFactory)
     public init(
         params: PartialFSRSParameters = PartialFSRSParameters(),
         randomProvider: RandomProvider? = nil,
-        logger: (any FSRSLogger)? = nil
+        logger: (any FSRSLogger)? = nil,
+        schedulerFactory: (any SchedulerFactory<Card>)? = nil
     ) {
         let finalParams = FSRSParametersGenerator.generate(from: params)
         self.useShortTerm = finalParams.enableShortTerm
@@ -40,18 +46,19 @@ public struct FSRS<Card: FSRSCard> {
             randomProvider: randomProvider,
             logger: logger
         )
-        
+
         self.retrievabilityService = RetrievabilityService(
             algorithm: algorithm,
             logger: logger
         )
         self.cardStateService = CardStateService<Card>(logger: logger)
-        
+        self.schedulerFactory = schedulerFactory ?? FSRSSchedulerFactory<Card>()
+
         logger?.debug("FSRS initialized: useShortTerm=\(useShortTerm)")
     }
-    
+
     // MARK: - Algorithm Access
-    
+
     /// Access to algorithm parameters (read-only after initialization)
     ///
     /// Parameters cannot be mutated after FSRS is initialized because:
@@ -62,18 +69,19 @@ public struct FSRS<Card: FSRSCard> {
     public var parameters: FSRSParameters {
         get {
             algorithm.parameters
-        } set {
+        }
+        set {
             algorithm.parameters = newValue
         }
     }
-    
+
     /// Forgetting curve calculation
     public func forgettingCurve(_ elapsedDays: Double, _ stability: Double) -> Double {
         return algorithm.forgettingCurve(elapsedDays, stability)
     }
-    
+
     // MARK: - Core Scheduling Methods
-    
+
     /// Preview all rating scenarios
     /// Shows what would happen with each possible rating (Again, Hard, Good, Easy)
     ///
@@ -84,26 +92,17 @@ public struct FSRS<Card: FSRSCard> {
     /// - Throws: FSRSError if any operation fails
     public func `repeat`(card: Card, now: Date) throws -> RecordLog<Card> {
         logger?.debug("Previewing all ratings: state=\(card.state), useShortTerm=\(useShortTerm)")
-        
-        if useShortTerm {
-            let scheduler = BasicScheduler<Card>(
-                card: card,
-                now: now,
-                algorithm: algorithm,
-                logger: logger
-            )
-            return try scheduler.preview()
-        } else {
-            let scheduler = LongTermScheduler<Card>(
-                card: card,
-                now: now,
-                algorithm: algorithm,
-                logger: logger
-            )
-            return try scheduler.preview()
-        }
+
+        let scheduler = schedulerFactory.makeScheduler(
+            card: card,
+            now: now,
+            algorithm: algorithm,
+            useShortTerm: useShortTerm,
+            logger: logger
+        )
+        return try scheduler.preview()
     }
-    
+
     /// Get next state for specific grade
     ///
     /// - Parameters:
@@ -114,33 +113,24 @@ public struct FSRS<Card: FSRSCard> {
     /// - Throws: FSRSError if any operation fails
     public func next(card: Card, now: Date, grade: Rating) throws -> RecordLogItem<Card> {
         logger?.debug("Processing next: grade=\(grade), state=\(card.state)")
-        
+
         guard grade != .manual else {
             logger?.error("Manual grade not allowed for scheduling")
             throw FSRSError.manualGradeNotAllowed
         }
-        
-        if useShortTerm {
-            let scheduler = BasicScheduler<Card>(
-                card: card,
-                now: now,
-                algorithm: algorithm,
-                logger: logger
-            )
-            return try scheduler.review(grade: grade)
-        } else {
-            let scheduler = LongTermScheduler<Card>(
-                card: card,
-                now: now,
-                algorithm: algorithm,
-                logger: logger
-            )
-            return try scheduler.review(grade: grade)
-        }
+
+        let scheduler = schedulerFactory.makeScheduler(
+            card: card,
+            now: now,
+            algorithm: algorithm,
+            useShortTerm: useShortTerm,
+            logger: logger
+        )
+        return try scheduler.review(grade: grade)
     }
-    
+
     // MARK: - Retrievability Methods
-    
+
     /// Get retrievability of card as percentage string
     /// - Parameters:
     ///   - card: Card to process
@@ -149,7 +139,7 @@ public struct FSRS<Card: FSRSCard> {
     public func getRetrievability(card: Card, now: Date? = nil) -> String {
         retrievabilityService.getRetrievabilityFormatted(card: card, now: now)
     }
-    
+
     /// Get retrievability of card as numeric value
     /// - Parameters:
     ///   - card: Card to process
@@ -158,9 +148,9 @@ public struct FSRS<Card: FSRSCard> {
     public func getRetrievabilityValue(card: Card, now: Date? = nil) -> Double {
         retrievabilityService.getRetrievabilityValue(card: card, now: now)
     }
-    
+
     // MARK: - Card State Operations
-    
+
     /// Rollback card to previous state
     /// - Parameters:
     ///   - card: Current card state
@@ -170,7 +160,7 @@ public struct FSRS<Card: FSRSCard> {
     public func rollback(card: Card, log: ReviewLog) throws -> Card {
         try cardStateService.rollback(card: card, log: log)
     }
-    
+
     /// Forget a card (reset to new state)
     /// - Parameters:
     ///   - card: Card to forget
@@ -180,7 +170,7 @@ public struct FSRS<Card: FSRSCard> {
     public func forget(card: Card, now: Date, resetCount: Bool = false) -> RecordLogItem<Card> {
         cardStateService.forget(card: card, now: now, resetCount: resetCount)
     }
-    
+
     /// Reschedule card based on review history
     /// - Parameters:
     ///   - currentCard: Current card state
@@ -194,21 +184,21 @@ public struct FSRS<Card: FSRSCard> {
         options: RescheduleOptions<Card> = RescheduleOptions<Card>()
     ) throws -> RescheduleResult<Card> {
         logger?.debug("Rescheduling card with \(reviews.count) reviews")
-        
+
         var filteredReviews = reviews
-        
+
         // Sort reviews if needed
         if let orderBy = options.reviewsOrderBy {
             filteredReviews.sort(by: orderBy)
         }
-        
+
         // Skip manual reviews if requested
         if options.skipManual {
             filteredReviews = filteredReviews.filter { $0.rating != .manual }
         }
-        
+
         let rescheduleService = RescheduleService<Card>(fsrs: self, logger: logger)
-        
+
         // Use firstCard or create empty from currentCard
         var emptyCard = currentCard
         emptyCard.due = currentCard.due
@@ -220,31 +210,31 @@ public struct FSRS<Card: FSRSCard> {
         emptyCard.lapses = 0
         emptyCard.state = .new
         emptyCard.lastReview = nil
-        
+
         let collections = try rescheduleService.reschedule(
             currentCard: options.firstCard ?? emptyCard,
             reviews: filteredReviews
         )
-        
+
         let nowDate = options.now ?? Date()
-        
+
         let manualItem = try rescheduleService.calculateManualRecord(
             currentCard: currentCard,
             now: nowDate,
             recordLogItem: collections.last,
             updateMemory: options.updateMemoryState
         )
-        
+
         var resultCollections = collections
         if let handler = options.recordLogHandler {
             resultCollections = collections.map { handler($0) }
         }
-        
+
         var resultManualItem: RecordLogItem<Card>? = manualItem
         if let handler = options.recordLogItemHandler, let manualItem = manualItem {
             resultManualItem = handler(manualItem)
         }
-        
+
         return RescheduleResult<Card>(
             collections: resultCollections,
             rescheduleItem: resultManualItem
