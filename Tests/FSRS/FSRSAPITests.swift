@@ -293,7 +293,7 @@ struct FSRSAPITests {
     }
 
     @Test("Retrievability decreases over time")
-    func testRetrievabilityDecreases() {
+    func testRetrievabilityDecreases() throws {
         let f = createFSRS()
         let baseDate = Date()
         let card = TestCard(
