@@ -12,6 +12,7 @@ Swift FSRS is a native Swift package that implements the FSRS-6 spaced repetitio
 
 - ✅ Complete FSRS-6 algorithm implementation
 - ✅ Protocol-oriented design - works with your own card types
+- ✅ Concurrency support
 - ✅ Card scheduling with learning steps support (BasicScheduler)
 - ✅ Long-term scheduling without learning steps (LongTermScheduler)
 - ✅ Reschedule functionality for replaying review history
