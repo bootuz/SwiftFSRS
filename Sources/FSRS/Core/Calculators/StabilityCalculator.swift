@@ -178,4 +178,3 @@ public struct StabilityCalculator {
         return newStability
     }
 }
-

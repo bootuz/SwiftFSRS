@@ -3,7 +3,6 @@ import Foundation
 /// Applies interval constraints to ensure proper ordering of intervals
 /// Ensures: Again < Hard < Good < Easy
 public struct IntervalConstraintApplier {
-    
     /// Apply constraints to intervals for a new card
     ///
     /// - Parameters:
@@ -70,4 +69,3 @@ public struct IntervalConstraintApplier {
         )
     }
 }
-

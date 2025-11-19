@@ -13,7 +13,7 @@ public enum Rating: Int, Codable, CaseIterable, Sendable {
     case hard = 2
     case good = 3
     case easy = 4
-    
+
     var description: String {
         switch self {
         case .manual:
@@ -44,12 +44,12 @@ public enum TimeUnit: String, Codable, Sendable {
 public struct StepUnit: Codable, Hashable, Sendable, CustomStringConvertible {
     public let value: Int
     public let unit: TimeUnit
-    
+
     public init(value: Int, unit: TimeUnit) {
         self.value = value
         self.unit = unit
     }
-    
+
     /// Convert step unit to minutes
     public var scheduledMinutes: Int {
         switch unit {
@@ -61,24 +61,24 @@ public struct StepUnit: Codable, Hashable, Sendable, CustomStringConvertible {
             return value * 24 * 60
         }
     }
-    
+
     /// Initialize from string format like "1m", "10m", "5h"
     public init?(from string: String) {
         guard !string.isEmpty else { return nil }
-        
-        let unitChar = string.last!
+
+        guard let unitChar = string.last else { return nil }
         guard let unit = TimeUnit(rawValue: String(unitChar)) else { return nil }
-        
+
         let valueString = String(string.dropLast())
         guard let value = Int(valueString) else { return nil }
-        
+
         self.value = value
         self.unit = unit
     }
-    
+
     /// Convert to string format
     public var description: String {
-        return "\(value)\(unit.rawValue)"
+        "\(value)\(unit.rawValue)"
     }
 }
 

@@ -17,17 +17,26 @@ let package = Package(
             targets: ["FSRS"]
         )
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/realm/SwiftLint.git", from: "0.62.2")
+    ],
     targets: [
         .target(
             name: "FSRS",
             dependencies: [],
-            path: "Sources/FSRS"
+            path: "Sources/FSRS",
+            plugins: [
+                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLint")
+            ]
         ),
         .testTarget(
             name: "FSRSTests",
             dependencies: ["FSRS"],
-            path: "Tests/FSRS"
+            path: "Tests/FSRS",
+            exclude: ["README.md"],
+            plugins: [
+                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLint")
+            ]
         ),
     ]
 )

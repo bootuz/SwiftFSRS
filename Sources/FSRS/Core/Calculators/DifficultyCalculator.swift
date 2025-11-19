@@ -101,4 +101,3 @@ public struct DifficultyCalculator {
         return try Difficulty(roundToFixed(reverted))
     }
 }
-

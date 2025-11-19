@@ -15,11 +15,11 @@ public struct AleaRandomProvider: RandomProvider {
     }
     
     public mutating func next() -> Double {
-        return alea.next()
+        alea.next()
     }
     
     public mutating func int32() -> Int32 {
-        return alea.int32()
+        alea.int32()
     }
 }
 
@@ -39,7 +39,6 @@ public struct MockRandomProvider: RandomProvider {
     }
     
     public mutating func int32() -> Int32 {
-        return Int32(next() * Double(Int32.max))
+        Int32(next() * Double(Int32.max))
     }
 }
-

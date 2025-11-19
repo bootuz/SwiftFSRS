@@ -99,4 +99,3 @@ public struct IntervalCalculator {
         return result
     }
 }
-

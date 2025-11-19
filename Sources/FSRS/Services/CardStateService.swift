@@ -127,4 +127,3 @@ public struct CardStateService<Card: FSRSCard> {
         return RecordLogItem(card: forgottenCard, log: forgetLog)
     }
 }
-

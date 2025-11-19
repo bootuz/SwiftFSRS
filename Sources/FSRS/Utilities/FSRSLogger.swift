@@ -5,7 +5,6 @@
 //  Created by Astemir Boziev on 05.11.25.
 //
 
-
 import Foundation
 
 public enum FSRSLogLevel: Int, Codable, CustomStringConvertible, Sendable {
@@ -13,13 +12,17 @@ public enum FSRSLogLevel: Int, Codable, CustomStringConvertible, Sendable {
     case debug
     case warning
     case error
-    
+
     public var description: String {
         switch self {
-        case .info: "info"
-        case .debug: "debug"
-        case .warning: "warning"
-        case .error: "error"
+        case .info:
+            return "info"
+        case .debug:
+            return "debug"
+        case .warning:
+            return "warning"
+        case .error:
+            return "error"
         }
     }
 }
@@ -32,7 +35,7 @@ public struct FSRSLogMessage: Codable, CustomStringConvertible, Sendable {
     public let function: String
     public let line: UInt
     public let timestamp: TimeInterval
-    
+
     @usableFromInline
     init(
         system: String,
@@ -51,12 +54,12 @@ public struct FSRSLogMessage: Codable, CustomStringConvertible, Sendable {
         self.line = line
         self.timestamp = timestamp
     }
-    
+
     public var description: String {
         let date = Date(timeIntervalSince1970: timestamp).iso8601String
         let file = fileID.split(separator: ".", maxSplits: 1).first.map(String.init) ?? fileID
         let description = "\(date) [\(level)] [\(system)] [\(file).\(function):\(line)] \(message)"
-        
+
         return description
     }
 }
@@ -75,7 +78,7 @@ extension FSRSLogger {
         line: UInt = #line,
     ) {
         let system = "\(fileID)".split(separator: "/").first ?? ""
-        
+
         log(
             message: FSRSLogMessage(
                 system: "\(system)",
@@ -88,7 +91,7 @@ extension FSRSLogger {
             )
         )
     }
-    
+
     @inlinable
     public func info(
         _ message: @autoclosure () -> String,
@@ -104,7 +107,7 @@ extension FSRSLogger {
             line: line,
         )
     }
-    
+
     @inlinable
     public func debug(
         _ message: @autoclosure () -> String,
@@ -120,7 +123,7 @@ extension FSRSLogger {
             line: line,
         )
     }
-    
+
     @inlinable
     public func warning(
         _ message: @autoclosure () -> String,
@@ -136,7 +139,7 @@ extension FSRSLogger {
             line: line,
         )
     }
-    
+
     @inlinable
     public func error(
         _ message: @autoclosure () -> String,
@@ -155,46 +158,45 @@ extension FSRSLogger {
 }
 
 #if compiler(>=6.0)
-@inlinable
-@discardableResult
-package func trace<R: Sendable>(
-    using logger: (any FSRSLogger)?,
-    _ operation: () async throws -> R,
-    isolation _: isolated (any Actor)? = #isolation,
-    fileID: StaticString = #fileID,
-    function: StaticString = #function,
-    line: UInt = #line
-) async rethrows -> R {
-    logger?.debug("begin", fileID: fileID, function: function, line: line)
-    defer { logger?.debug("end", fileID: fileID, function: function, line: line) }
-    
-    do {
-        return try await operation()
-    } catch {
-        logger?.debug("error: \(error)", fileID: fileID, function: function, line: line)
-        throw error
-    }
-}
-#else
-@_unsafeInheritExecutor
-@inlinable
-@discardableResult
-package func trace<R: Sendable>(
-    using logger: (any FSRSLogger)?,
-    _ operation: () async throws -> R,
-    fileID: StaticString = #fileID,
-    function: StaticString = #function,
-    line: UInt = #line
-) async rethrows -> R {
-    logger?.debug("begin", fileID: fileID, function: function, line: line)
-    defer { logger?.debug("end", fileID: fileID, function: function, line: line) }
-    
-    do {
-        return try await operation()
-    } catch {
-        logger?.debug("error: \(error)", fileID: fileID, function: function, line: line)
-        throw error
-    }
-}
-#endif
+    @inlinable
+    @discardableResult
+    package func trace<R: Sendable>(
+        using logger: (any FSRSLogger)?,
+        _ operation: () async throws -> R,
+        isolation _: isolated (any Actor)? = #isolation,
+        fileID: StaticString = #fileID,
+        function: StaticString = #function,
+        line: UInt = #line
+    ) async rethrows -> R {
+        logger?.debug("begin", fileID: fileID, function: function, line: line)
+        defer { logger?.debug("end", fileID: fileID, function: function, line: line) }
 
+        do {
+            return try await operation()
+        } catch {
+            logger?.debug("error: \(error)", fileID: fileID, function: function, line: line)
+            throw error
+        }
+    }
+#else
+    @_unsafeInheritExecutor
+    @inlinable
+    @discardableResult
+    package func trace<R: Sendable>(
+        using logger: (any FSRSLogger)?,
+        _ operation: () async throws -> R,
+        fileID: StaticString = #fileID,
+        function: StaticString = #function,
+        line: UInt = #line
+    ) async rethrows -> R {
+        logger?.debug("begin", fileID: fileID, function: function, line: line)
+        defer { logger?.debug("end", fileID: fileID, function: function, line: line) }
+
+        do {
+            return try await operation()
+        } catch {
+            logger?.debug("error: \(error)", fileID: fileID, function: function, line: line)
+            throw error
+        }
+    }
+#endif

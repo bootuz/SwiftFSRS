@@ -70,4 +70,3 @@ public struct RetrievabilityService {
         return String(format: "%.2f%%", value * 100)
     }
 }
-

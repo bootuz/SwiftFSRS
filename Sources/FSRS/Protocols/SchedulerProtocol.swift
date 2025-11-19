@@ -59,7 +59,7 @@ extension SchedulerProtocol {
     /// - Returns: Record log with all grades
     /// - Throws: FSRSError if any operation fails
     public func preview() throws -> RecordLog<Card> {
-        return [
+        [
             .again: try review(grade: .again),
             .hard: try review(grade: .hard),
             .good: try review(grade: .good),
@@ -88,7 +88,7 @@ extension SchedulerProtocol {
     /// - Parameter rating: Rating
     /// - Returns: Review log
     public func buildLog(rating: Rating) -> ReviewLog {
-        return ReviewLog(
+        ReviewLog(
             rating: rating,
             state: current.state,
             due: last.lastReview ?? last.due,

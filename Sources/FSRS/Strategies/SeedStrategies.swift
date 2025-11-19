@@ -4,7 +4,7 @@ import Foundation
 /// Generates seed from review time, reps, and difficulty × stability
 public struct DefaultSeedStrategy: SeedStrategyProtocol {
     public init() {}
-    
+
     public func generateSeed(for scheduler: any SchedulerProtocol) -> String {
         let time = scheduler.reviewTime.timeIntervalSince1970
         let reps = scheduler.current.reps
@@ -17,7 +17,7 @@ public struct DefaultSeedStrategy: SeedStrategyProtocol {
 /// Uses card identifier for seed generation
 public struct CardIdSeedStrategy: SeedStrategyProtocol {
     public init() {}
-    
+
     public func generateSeed(for scheduler: any SchedulerProtocol) -> String {
         // Generate seed based on card properties
         let reps = scheduler.current.reps
@@ -31,14 +31,13 @@ public struct CardIdSeedStrategy: SeedStrategyProtocol {
 /// Default seed strategy function
 /// Generates seed from review time, reps, and difficulty × stability
 public func defaultInitSeedStrategy(_ scheduler: any SchedulerProtocol) -> String {
-    let defaultStrategy = DefaultSeedStrategy()
+    let defaultStrategy: SeedStrategyProtocol = DefaultSeedStrategy()
     return defaultStrategy.generateSeed(for: scheduler)
 }
 
 /// Generate seed strategy using card ID
 /// - Returns: Seed strategy function
 public func cardIdSeedStrategy(_ scheduler: any SchedulerProtocol) -> String {
-    let strategy = CardIdSeedStrategy()
+    let strategy: SeedStrategyProtocol = CardIdSeedStrategy()
     return strategy.generateSeed(for: scheduler)
 }
-

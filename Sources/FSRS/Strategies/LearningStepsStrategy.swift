@@ -20,7 +20,7 @@ public func basicLearningStepsStrategy(
     let firstStep = learningSteps[0]
     
     let getAgainInterval: () -> Int = {
-        return firstStep.scheduledMinutes
+        firstStep.scheduledMinutes
     }
     
     let getHardInterval: () -> Int = {
@@ -74,4 +74,3 @@ public func basicLearningStepsStrategy(
     
     return result
 }
-

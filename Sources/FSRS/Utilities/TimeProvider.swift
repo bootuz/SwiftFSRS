@@ -17,4 +17,3 @@ public struct MockTimeProvider: TimeProvider {
     public init(fixedDate: Date) { self.fixedDate = fixedDate }
     public func now() -> Date { fixedDate }
 }
-

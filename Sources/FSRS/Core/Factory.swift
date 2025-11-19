@@ -11,6 +11,5 @@ public func fsrs<Card: FSRSCard>(
     randomProvider: RandomProvider? = nil,
     logger: (any FSRSLogger)? = nil
 ) -> FSRS<Card> {
-    return FSRS<Card>(params: params, randomProvider: randomProvider, logger: logger)
+    FSRS<Card>(params: params, randomProvider: randomProvider, logger: logger)
 }
-

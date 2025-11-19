@@ -22,4 +22,3 @@ public protocol FSRSAlgorithmProtocol {
     /// - Returns: Retrievability (probability of recall)
     func forgettingCurve(_ elapsedDays: Double, _ stability: Double) -> Double
 }
-

@@ -4,7 +4,7 @@ import Foundation
 public let defaultRequestRetention: Double = 0.9
 
 /// Default maximum interval in days
-public let defaultMaximumInterval: Int = 36500
+public let defaultMaximumInterval: Int = 36_500
 
 /// Default fuzzing enabled state
 public let defaultEnableFuzz: Bool = false
@@ -15,7 +15,7 @@ public let defaultEnableShortTerm: Bool = true
 /// Default learning steps: [1m, 10m]
 public let defaultLearningSteps: [StepUnit] = [
     StepUnit(value: 1, unit: TimeUnit.minutes),
-    StepUnit(value: 10, unit: TimeUnit.minutes)
+    StepUnit(value: 10, unit: TimeUnit.minutes),
 ]
 
 /// Default relearning steps: [10m]
@@ -27,7 +27,7 @@ public let defaultRelearningSteps: [StepUnit] = [
 public let S_MIN: Double = 0.001
 
 /// Maximum stability value
-public let S_MAX: Double = 36500.0
+public let S_MAX: Double = 36_500.0
 
 /// Maximum initial stability
 public let INIT_S_MAX: Double = 100.0
@@ -60,7 +60,7 @@ public let defaultW: [Double] = [
     0.5425,     // w[17] - short-term stability exponent
     0.0912,     // w[18] - short-term stability exponent
     0.0658,     // w[19] - short-term last-stability exponent
-    FSRS6_DEFAULT_DECAY  // w[20] - decay factor
+    FSRS6_DEFAULT_DECAY,  // w[20] - decay factor
 ]
 
 /// W17_W18 ceiling value
@@ -72,7 +72,7 @@ public func clampParameters(
     w17W18Ceiling: Double = W17_W18_Ceiling,
     enableShortTerm: Bool = defaultEnableShortTerm
 ) -> [(Double, Double)] {
-    return [
+    [
         (S_MIN, INIT_S_MAX),  // initial stability (Again)
         (S_MIN, INIT_S_MAX),  // initial stability (Hard)
         (S_MIN, INIT_S_MAX),  // initial stability (Good)
@@ -93,7 +93,6 @@ public func clampParameters(
         (0.0, w17W18Ceiling), // short-term stability (exponent)
         (0.0, w17W18Ceiling), // short-term stability (exponent)
         (enableShortTerm ? 0.01 : 0.0, 0.8), // short-term last-stability (exponent)
-        (0.1, 0.8)            // decay
+        (0.1, 0.8),            // decay
     ]
 }
-

@@ -117,4 +117,3 @@ public typealias LearningStepsStrategy = (
     State,
     Int
 ) -> [Rating: (scheduledMinutes: Int, nextStep: Int)]
-

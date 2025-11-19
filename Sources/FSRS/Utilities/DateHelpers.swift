@@ -76,7 +76,7 @@ public func showDiffMessage(
     let timeUnits: [TimeInterval] = [60, 60, 24, 31, 12]
     
     var i = 0
-    diff /= 1000 // Convert to seconds
+    diff /= 1_000 // Convert to seconds
     
     while i < timeUnits.count && diff >= timeUnits[i] {
         diff /= timeUnits[i]
@@ -90,4 +90,3 @@ public func showDiffMessage(
         return "\(value)"
     }
 }
-

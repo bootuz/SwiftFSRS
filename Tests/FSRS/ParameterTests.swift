@@ -5,7 +5,6 @@ import Foundation
 /// Test suite for FSRS parameter management and validation
 @Suite("Parameter Management Tests")
 struct ParameterTests {
-    
     // MARK: - Parameter Generation Tests
     
     @Test("Generate parameters with all defaults")
@@ -108,7 +107,7 @@ struct ParameterTests {
         #expect(step != nil)
         #expect(step?.value == 1)
         #expect(step?.unit == .days)
-        #expect(step?.scheduledMinutes == 1440)
+        #expect(step?.scheduledMinutes == 1_440)
     }
     
     @Test("StepUnit string literal initialization")
@@ -188,7 +187,7 @@ struct ParameterTests {
     func testParametersCodable() throws {
         let original = FSRSParameters(
             requestRetention: 0.9,
-            maximumInterval: 36500,
+            maximumInterval: 36_500,
             w: Array(repeating: 1.0, count: 21),
             enableFuzz: true,
             enableShortTerm: true,
@@ -211,7 +210,7 @@ struct ParameterTests {
     func testLearningStepsAffectScheduling() throws {
         let steps = [
             StepUnit(value: 1, unit: .minutes),
-            StepUnit(value: 10, unit: .minutes)
+            StepUnit(value: 10, unit: .minutes),
         ]
         let params = PartialFSRSParameters(
             enableShortTerm: true,
@@ -318,10 +317,10 @@ struct ParameterTests {
     
     @Test("Large maximum interval")
     func testLargeMaximumInterval() {
-        let params = PartialFSRSParameters(maximumInterval: 100000)
+        let params = PartialFSRSParameters(maximumInterval: 100_000)
         let f: FSRS<TestCard> = fsrs(params: params)
         
-        #expect(f.parameters.maximumInterval == 100000)
+        #expect(f.parameters.maximumInterval == 100_000)
     }
     
     // MARK: - Complex Learning Steps Tests
@@ -332,7 +331,7 @@ struct ParameterTests {
             StepUnit(value: 1, unit: .minutes),
             StepUnit(value: 10, unit: .minutes),
             StepUnit(value: 1, unit: .hours),
-            StepUnit(value: 1, unit: .days)
+            StepUnit(value: 1, unit: .days),
         ]
         let params = PartialFSRSParameters(learningSteps: steps)
         let generated = FSRSParametersGenerator.generate(from: params)
@@ -341,7 +340,7 @@ struct ParameterTests {
         #expect(generated.learningSteps[0].scheduledMinutes == 1)
         #expect(generated.learningSteps[1].scheduledMinutes == 10)
         #expect(generated.learningSteps[2].scheduledMinutes == 60)
-        #expect(generated.learningSteps[3].scheduledMinutes == 1440)
+        #expect(generated.learningSteps[3].scheduledMinutes == 1_440)
     }
     
     @Test("Learning steps maintain order")
@@ -349,7 +348,7 @@ struct ParameterTests {
         let steps = [
             StepUnit(value: 1, unit: .minutes),
             StepUnit(value: 5, unit: .minutes),
-            StepUnit(value: 10, unit: .minutes)
+            StepUnit(value: 10, unit: .minutes),
         ]
         let params = PartialFSRSParameters(learningSteps: steps)
         let generated = FSRSParametersGenerator.generate(from: params)
@@ -359,4 +358,3 @@ struct ParameterTests {
         }
     }
 }
-

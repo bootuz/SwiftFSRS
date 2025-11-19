@@ -41,4 +41,3 @@ public struct FSRSParameters: Codable, Equatable {
         self.relearningSteps = relearningSteps
     }
 }
-

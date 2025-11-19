@@ -31,13 +31,13 @@ public let GRADE_NEUTRAL_VALUE: Double = 3.0
 // MARK: - Time Conversion Constants
 
 /// Number of minutes in one day
-public let MINUTES_PER_DAY: Int = 1440
+public let MINUTES_PER_DAY: Int = 1_440
 
 /// Number of minutes in one hour
 public let MINUTES_PER_HOUR: Int = 60
 
 /// Number of seconds in one day
-public let SECONDS_PER_DAY: Double = 86400.0
+public let SECONDS_PER_DAY: Double = 86_400.0
 
 // MARK: - Fuzzing Constants
 
@@ -46,4 +46,3 @@ public let FUZZ_MINIMUM_INTERVAL: Double = 2.5
 
 /// Threshold to determine if interval is considered short-term
 public let SHORT_TERM_THRESHOLD_MINUTES: Int = MINUTES_PER_DAY
-

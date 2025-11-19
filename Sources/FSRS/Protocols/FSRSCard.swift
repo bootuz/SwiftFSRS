@@ -11,7 +11,7 @@ import Foundation
 ///     let id: UUID
 ///     var question: String
 ///     var answer: String
-///     
+///
 ///     // FSRS-required properties
 ///     var due: Date
 ///     var state: State
@@ -46,4 +46,3 @@ public protocol FSRSCard: Sendable {
     /// Number of times the card was forgotten or answered incorrectly
     var lapses: Int { get set }
 }
-

@@ -23,7 +23,7 @@ public struct RescheduleService<Card: FSRSCard> {
     /// - Returns: Record log item
     /// - Throws: FSRSError if any operation fails
     public func replay(card: Card, reviewed: Date, rating: Rating) throws -> RecordLogItem<Card> {
-        return try fsrs.next(card: card, now: reviewed, grade: rating)
+        try fsrs.next(card: card, now: reviewed, grade: rating)
     }
     
     /// Handle manual rating

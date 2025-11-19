@@ -37,7 +37,7 @@ public struct FSRSParametersGenerator {
     /// - Parameter props: Partial parameters
     /// - Returns: Complete FSRS parameters
     public static func generate(from props: PartialFSRSParameters) -> FSRSParameters {
-        return generator.generate(from: props)
+        generator.generate(from: props)
     }
     
     private static let validator: ParameterValidator = DefaultParameterValidator()
@@ -48,7 +48,7 @@ public struct FSRSParametersGenerator {
     /// - Returns: Validated parameters array
     /// - Throws: Error if parameters are invalid
     public static func checkParameters(_ parameters: [Double]) throws -> [Double] {
-        return try validator.validate(parameters)
+        try validator.validate(parameters)
     }
     
     /// Migrate parameters from older FSRS versions (17/19 elements) to FSRS-6 (21 elements)
@@ -62,7 +62,7 @@ public struct FSRSParametersGenerator {
         numRelearningSteps: Int = 0,
         enableShortTerm: Bool = defaultEnableShortTerm
     ) -> [Double] {
-        return migrator.migrate(
+        migrator.migrate(
             parameters: parameters,
             numRelearningSteps: numRelearningSteps,
             enableShortTerm: enableShortTerm
@@ -102,4 +102,3 @@ public struct FSRSParametersGenerator {
 }
 
 // FSRSError is now defined in FSRSErrors.swift
-

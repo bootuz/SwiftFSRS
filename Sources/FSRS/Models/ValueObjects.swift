@@ -244,4 +244,3 @@ public struct MemoryState: Sendable, Equatable, Codable {
         MemoryState(stability: newStability, difficulty: newDifficulty)
     }
 }
-

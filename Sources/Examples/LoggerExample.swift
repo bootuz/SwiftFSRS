@@ -184,14 +184,14 @@ actor AsyncLogger: FSRSLogger {
     }
     
     func getMessages() -> [FSRSLogMessage] {
-        return messages
+        messages
     }
 }
 
 // MARK: - Example Card Implementation
 
 struct MyCard: FSRSCard {
-    var due: Date = Date()
+    var due = Date()
     var stability: Double = 0
     var difficulty: Double = 0
     var scheduledDays: Int = 0
@@ -308,4 +308,3 @@ func runAllExamples() {
     print("\n=== Example 6: Performance Monitoring ===")
     examplePerformanceMonitoring()
 }
-

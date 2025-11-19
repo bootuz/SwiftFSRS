@@ -1,0 +1,7 @@
+{
+    "swift.lint.enabled": true,
+    "swift.lint.path": "/usr/local/bin/swiftlint",
+    "editor.codeActionsOnSave": {
+        "source.fixAll.swift": "explicit"
+    }
+}

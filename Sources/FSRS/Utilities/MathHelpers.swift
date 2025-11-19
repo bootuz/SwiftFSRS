@@ -8,7 +8,7 @@ import Foundation
 /// - Returns: Clamped value
 @inlinable
 public func clamp(_ value: Double, min: Double, max: Double) -> Double {
-    return Swift.min(Swift.max(value, min), max)
+    Swift.min(Swift.max(value, min), max)
 }
 
 /// Fuzz range configuration
@@ -21,7 +21,7 @@ private struct FuzzRange {
 private let fuzzRanges: [FuzzRange] = [
     FuzzRange(start: 2.5, end: 7.0, factor: 0.15),
     FuzzRange(start: 7.0, end: 20.0, factor: 0.1),
-    FuzzRange(start: 20.0, end: Double.infinity, factor: 0.05)
+    FuzzRange(start: 20.0, end: Double.infinity, factor: 0.05),
 ]
 
 /// Get fuzz range for interval
@@ -66,4 +66,3 @@ public func roundToFixed(_ value: Double, places: Int = 8) -> Double {
     let multiplier = pow(10.0, Double(places))
     return round(value * multiplier) / multiplier
 }
-

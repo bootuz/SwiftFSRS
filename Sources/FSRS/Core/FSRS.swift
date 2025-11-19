@@ -77,7 +77,7 @@ public struct FSRS<Card: FSRSCard> {
 
     /// Forgetting curve calculation
     public func forgettingCurve(_ elapsedDays: Double, _ stability: Double) -> Double {
-        return algorithm.forgettingCurve(elapsedDays, stability)
+        algorithm.forgettingCurve(elapsedDays, stability)
     }
 
     // MARK: - Core Scheduling Methods

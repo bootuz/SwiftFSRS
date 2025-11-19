@@ -20,7 +20,7 @@ public final class BasicScheduler<Card: FSRSCard>: BaseScheduler<Card> {
     
     // MARK: - New Card Scheduling
     
-    public override func scheduleNewCard(grade: Rating) throws -> RecordLogItem<Card> {
+    override public func scheduleNewCard(grade: Rating) throws -> RecordLogItem<Card> {
         logger?.debug("Basic new card: grade=\(grade)")
         
         // Calculate next memory state
@@ -44,7 +44,7 @@ public final class BasicScheduler<Card: FSRSCard>: BaseScheduler<Card> {
     
     // MARK: - Learning/Relearning Scheduling
     
-    public override func scheduleLearningCard(grade: Rating) throws -> RecordLogItem<Card> {
+    override public func scheduleLearningCard(grade: Rating) throws -> RecordLogItem<Card> {
         logger?.debug("Basic learning: grade=\(grade), currentState=\(lastCard.state)")
         
         // Calculate next memory state
@@ -68,7 +68,7 @@ public final class BasicScheduler<Card: FSRSCard>: BaseScheduler<Card> {
     
     // MARK: - Review Card Scheduling
     
-    public override func scheduleReviewCard(grade: Rating) throws -> RecordLogItem<Card> {
+    override public func scheduleReviewCard(grade: Rating) throws -> RecordLogItem<Card> {
         logger?.debug("Basic review: grade=\(grade)")
         
         // Calculate retrievability
@@ -252,4 +252,3 @@ public final class BasicScheduler<Card: FSRSCard>: BaseScheduler<Card> {
         }
     }
 }
-

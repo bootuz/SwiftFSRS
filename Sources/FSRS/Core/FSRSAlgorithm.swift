@@ -81,9 +81,8 @@ open class FSRSAlgorithm: FSRSAlgorithmProtocol {
     // - IntervalCalculator: interval calculation and fuzzing
     //
     // The old nextState(), initStability(), nextDifficulty(), nextRecallStability(),
-    // nextForgetStability(), nextShortTermStability(), nextInterval(), and applyFuzz() 
+    // nextForgetStability(), nextShortTermStability(), nextInterval(), and applyFuzz()
     // methods have been removed as they are now implemented in the calculator classes.
     //
     // Schedulers now use these calculators directly via BaseScheduler.
 }
-

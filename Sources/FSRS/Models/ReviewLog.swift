@@ -149,4 +149,3 @@ public struct FSRSHistory: Codable, Sendable {
         self.learningSteps = learningSteps
     }
 }
-
