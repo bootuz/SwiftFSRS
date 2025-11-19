@@ -1,6 +1,10 @@
 # Swift FSRS
 
 [![Swift](https://github.com/bootuz/SwiftFSRS/actions/workflows/swift.yml/badge.svg)](https://github.com/bootuz/SwiftFSRS/actions/workflows/swift.yml)
+![Swift 5.9](https://img.shields.io/badge/Swift-5.9-orange.svg)
+![Platform](https://img.shields.io/badge/platform-iOS%20%7C%20macOS%20%7C%20watchOS%20%7C%20tvOS-lightgrey.svg)
+[![License](https://img.shields.io/github/license/bootuz/SwiftFSRS.svg)](https://github.com/bootuz/SwiftFSRS/blob/main/LICENSE)
+[![Swift Package Manager](https://img.shields.io/badge/Swift_Package_Manager-compatible-orange?style=flat-square)](https://swift.org/package-manager/)
 
 A Swift implementation of the Free Spaced Repetition Scheduler (FSRS-6) algorithm.
 
