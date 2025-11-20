@@ -25,19 +25,13 @@ let package = Package(
         .target(
             name: "FSRS",
             dependencies: [],
-            path: "Sources/FSRS",
-            plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins")
-            ],
+            path: "Sources/FSRS"
         ),
         .testTarget(
             name: "FSRSTests",
             dependencies: ["FSRS"],
             path: "Tests/FSRS",
-            exclude: ["README.md"],
-            plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins")
-            ]
+            exclude: ["README.md"]
         )
     ]
 )
