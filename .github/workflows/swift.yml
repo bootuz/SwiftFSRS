@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Build
+    - name: Build FSRS
       run: swift build -v
     - name: Run tests
       run: swift test -v
