@@ -108,8 +108,8 @@ let recordLog = try f.repeat(card: card, now: now)
 let goodCard = recordLog[.good]!.card
 let goodLog = recordLog[.good]!.log
 
-// Review with a specific grade
-let result = try f.next(card: card, now: now, grade: .good)
+// Review with a specific rating
+let result = try f.next(card: card, now: now, rating: .good)
 let nextCard = result.card
 
 // Get retrievability as formatted string
@@ -168,7 +168,7 @@ Undo a review and restore the card to its previous state:
 
 ```swift
 // After reviewing a card, you get a RecordLogItem
-let result = try f.next(card: card, now: Date(), grade: .good)
+let result = try f.next(card: card, now: Date(), rating: .good)
 let currentCard = result.card
 let reviewLog = result.log
 

@@ -6,7 +6,7 @@ public struct IntervalCalculator {
     private let randomProvider: RandomProvider?
     private let timeProvider: TimeProvider
     private let logger: (any FSRSLogger)?
-    
+
     public init(
         parameters: FSRSParameters,
         randomProvider: RandomProvider? = nil,
@@ -18,9 +18,9 @@ public struct IntervalCalculator {
         self.timeProvider = timeProvider
         self.logger = logger
     }
-    
+
     // MARK: - Interval Calculation
-    
+
     /// Calculate the scheduled interval for next review
     /// I = min(max(1, round(S × modifier)), maximumInterval)
     ///
@@ -36,7 +36,7 @@ public struct IntervalCalculator {
     ) -> Int {
         let baseInterval = max(1, Int(round(stability.value * intervalModifier)))
         let constrainedInterval = min(baseInterval, parameters.maximumInterval)
-        
+
         logger?.debug("""
             Interval calc: \
             stability=\(stability.value), \
@@ -44,7 +44,7 @@ public struct IntervalCalculator {
             base=\(baseInterval), \
             constrained=\(constrainedInterval)
             """)
-        
+
         if parameters.enableFuzz && Double(constrainedInterval) >= FUZZ_MINIMUM_INTERVAL {
             let fuzzedInterval = applyFuzz(
                 interval: Double(constrainedInterval),
@@ -57,9 +57,9 @@ public struct IntervalCalculator {
             return constrainedInterval
         }
     }
-    
+
     // MARK: - Fuzzing
-    
+
     /// Apply fuzzing to interval to add variability
     /// Prevents cards from clustering at exact intervals
     ///
@@ -80,22 +80,22 @@ public struct IntervalCalculator {
             // Fallback to system random
             fuzzFactor = Double.random(in: 0..<1)
         }
-        
+
         let (minInterval, maxInterval) = getFuzzRange(
             interval: interval,
             elapsedDays: elapsedDays.value,
             maximumInterval: parameters.maximumInterval
         )
-        
+
         let result = Int(floor(fuzzFactor * Double(maxInterval - minInterval + 1) + Double(minInterval)))
-        
+
         logger?.info("""
             Fuzz details: \
             factor=\(fuzzFactor), \
             range=[\(minInterval), \(maxInterval)], \
             result=\(result)
             """)
-        
+
         return result
     }
 }

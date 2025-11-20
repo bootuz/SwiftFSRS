@@ -51,11 +51,11 @@ struct FSRSAPITests {
 
     @Test("Repeat shows all 4 rating options for new card")
     func testRepeatNewCard() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard()
         let now = Date()
 
-        let recordLog = try f.repeat(card: card, now: now)
+        let recordLog = try fsrs.repeat(card: card, now: now)
 
         // Should contain all 4 grades
         #expect(recordLog.count == 4)
@@ -67,11 +67,11 @@ struct FSRSAPITests {
 
     @Test("Repeat sets lastReview to current time")
     func testRepeatSetsLastReview() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard()
         let now = Date()
 
-        let recordLog = try f.repeat(card: card, now: now)
+        let recordLog = try fsrs.repeat(card: card, now: now)
 
         #expect(recordLog[.again]?.card.lastReview == now)
         #expect(recordLog[.hard]?.card.lastReview == now)
@@ -81,10 +81,10 @@ struct FSRSAPITests {
 
     @Test("Repeat calculates different stability for each rating")
     func testRepeatCalculatesStability() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard()
 
-        let recordLog = try f.repeat(card: card, now: Date())
+        let recordLog = try fsrs.repeat(card: card, now: Date())
 
         let againStability = try #require(recordLog[.again]).card.stability
         let hardStability = try #require(recordLog[.hard]).card.stability
@@ -100,10 +100,10 @@ struct FSRSAPITests {
 
     @Test("Repeat calculates different difficulty for each rating")
     func testRepeatCalculatesDifficulty() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard()
 
-        let recordLog = try f.repeat(card: card, now: Date())
+        let recordLog = try fsrs.repeat(card: card, now: Date())
 
         let againDifficulty = try #require(recordLog[.again]).card.difficulty
         let hardDifficulty = try #require(recordLog[.hard]).card.difficulty
@@ -119,10 +119,10 @@ struct FSRSAPITests {
 
     @Test("Repeat increments reps counter")
     func testRepeatIncrementsReps() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard()
 
-        let recordLog = try f.repeat(card: card, now: Date())
+        let recordLog = try fsrs.repeat(card: card, now: Date())
 
         #expect(recordLog[.again]?.card.reps == 1)
         #expect(recordLog[.hard]?.card.reps == 1)
@@ -132,7 +132,7 @@ struct FSRSAPITests {
 
     @Test("Repeat preserves custom card properties")
     func testRepeatPreservesCustomProperties() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = TestCard(
             question: "Custom Question",
             answer: "Custom Answer",
@@ -140,7 +140,7 @@ struct FSRSAPITests {
             notes: "Important note"
         )
 
-        let recordLog = try f.repeat(card: card, now: Date())
+        let recordLog = try fsrs.repeat(card: card, now: Date())
 
         #expect(recordLog[.good]?.card.question == "Custom Question")
         #expect(recordLog[.good]?.card.answer == "Custom Answer")
@@ -152,11 +152,11 @@ struct FSRSAPITests {
 
     @Test("Next returns card for specific rating")
     func testNextWithSpecificRating() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard()
         let now = Date()
 
-        let result = try f.next(card: card, now: now, grade: .good)
+        let result = try fsrs.next(card: card, now: now, rating: .good)
 
         #expect(result.card.state != .new)
         #expect(result.card.lastReview == now)
@@ -166,30 +166,30 @@ struct FSRSAPITests {
 
     @Test("Next throws error for manual rating")
     func testNextRejectsManualRating() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard()
 
         #expect(throws: FSRSError.self) {
-            _ = try f.next(card: card, now: Date(), grade: .manual)
+            _ = try fsrs.next(card: card, now: Date(), rating: .manual)
         }
     }
 
     @Test("Next with Again rating creates learning state")
     func testNextAgainCreatesLearningState() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard()
 
-        let result = try f.next(card: card, now: Date(), grade: .again)
+        let result = try fsrs.next(card: card, now: Date(), rating: .again)
 
         #expect(result.card.state == .learning)
     }
 
     @Test("Next with Easy rating creates review state")
     func testNextEasyCreatesReviewState() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard()
 
-        let result = try f.next(card: card, now: Date(), grade: .easy)
+        let result = try fsrs.next(card: card, now: Date(), rating: .easy)
 
         #expect(result.card.state == .review)
         #expect(result.card.scheduledDays > 0)
@@ -199,12 +199,12 @@ struct FSRSAPITests {
 
     @Test("New card transitions to Learning state with Again/Hard/Good")
     func testNewToLearningTransition() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         let card = createCard()
 
-        let againResult = try f.next(card: card, now: Date(), grade: .again)
-        let hardResult = try f.next(card: card, now: Date(), grade: .hard)
-        let goodResult = try f.next(card: card, now: Date(), grade: .good)
+        let againResult = try fsrs.next(card: card, now: Date(), rating: .again)
+        let hardResult = try fsrs.next(card: card, now: Date(), rating: .hard)
+        let goodResult = try fsrs.next(card: card, now: Date(), rating: .good)
 
         #expect(againResult.card.state == .learning)
         #expect(hardResult.card.state == .learning)
@@ -213,20 +213,20 @@ struct FSRSAPITests {
 
     @Test("New card transitions to Review state with Easy")
     func testNewToReviewTransition() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard()
 
-        let result = try f.next(card: card, now: Date(), grade: .easy)
+        let result = try fsrs.next(card: card, now: Date(), rating: .easy)
 
         #expect(result.card.state == .review)
     }
 
     @Test("Review card transitions to Relearning on Again")
     func testReviewToRelearningTransition() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         let card = createReviewCard()
 
-        let result = try f.next(card: card, now: Date(), grade: .again)
+        let result = try fsrs.next(card: card, now: Date(), rating: .again)
 
         #expect(result.card.state == .relearning)
         #expect(result.card.lapses == 1)
@@ -234,25 +234,25 @@ struct FSRSAPITests {
 
     @Test("Multiple reviews increment reps and update state")
     func testMultipleReviews() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         var card = createCard()
         var now = Date()
 
         // First review
-        var result = try f.next(card: card, now: now, grade: .good)
+        var result = try fsrs.next(card: card, now: now, rating: .good)
         card = result.card
         #expect(card.reps == 1)
 
         // Second review
         now = try #require(Calendar.current.date(byAdding: .day, value: 1, to: now))
-        result = try f.next(card: card, now: now, grade: .good)
+        result = try fsrs.next(card: card, now: now, rating: .good)
         card = result.card
         #expect(card.reps == 2)
 
         // Third review
         now = try #require(
             Calendar.current.date(byAdding: .day, value: Int(card.scheduledDays), to: now))
-        result = try f.next(card: card, now: now, grade: .good)
+        result = try fsrs.next(card: card, now: now, rating: .good)
         card = result.card
         #expect(card.reps == 3)
     }
@@ -261,10 +261,10 @@ struct FSRSAPITests {
 
     @Test("Retrievability returns formatted percentage string")
     func testGetRetrievabilityFormat() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createReviewCard()
 
-        let retrievability = f.getRetrievability(card: card)
+        let retrievability = fsrs.getRetrievability(card: card)
 
         // Should be formatted as percentage
         #expect(retrievability.contains("%"))
@@ -273,10 +273,10 @@ struct FSRSAPITests {
 
     @Test("Retrievability value is between 0 and 1 for review cards")
     func testGetRetrievabilityValue() {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createReviewCard()
 
-        let value = f.getRetrievabilityValue(card: card)
+        let value = fsrs.getRetrievabilityValue(card: card)
 
         #expect(value >= 0.0)
         #expect(value <= 1.0)
@@ -284,17 +284,17 @@ struct FSRSAPITests {
 
     @Test("New card has zero retrievability")
     func testNewCardRetrievability() {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard()
 
-        let value = f.getRetrievabilityValue(card: card)
+        let value = fsrs.getRetrievabilityValue(card: card)
 
         #expect(value == 0.0)
     }
 
     @Test("Retrievability decreases over time")
     func testRetrievabilityDecreases() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let baseDate = Date()
         let card = TestCard(
             question: "Test",
@@ -308,33 +308,33 @@ struct FSRSAPITests {
         )
 
         let now1 = try #require(Calendar.current.date(byAdding: .day, value: 1, to: baseDate))
-        let r1 = f.getRetrievabilityValue(card: card, now: now1)
+        let result1 = fsrs.getRetrievabilityValue(card: card, now: now1)
 
         let now2 = try #require(Calendar.current.date(byAdding: .day, value: 5, to: baseDate))
-        let r2 = f.getRetrievabilityValue(card: card, now: now2)
+        let result2 = fsrs.getRetrievabilityValue(card: card, now: now2)
 
         let now3 = try #require(Calendar.current.date(byAdding: .day, value: 10, to: baseDate))
-        let r3 = f.getRetrievabilityValue(card: card, now: now3)
+        let result3 = fsrs.getRetrievabilityValue(card: card, now: now3)
 
         // Retrievability should decrease over time
-        #expect(r1 > r2)
-        #expect(r2 > r3)
+        #expect(result1 > result2)
+        #expect(result2 > result3)
     }
 
     // MARK: - Rollback Tests
 
     @Test("Rollback restores previous card state")
     func testRollback() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let originalCard = createCard()
 
         // Perform a review
-        let result = try f.next(card: originalCard, now: Date(), grade: .good)
+        let result = try fsrs.next(card: originalCard, now: Date(), rating: .good)
         let updatedCard = result.card
         let log = result.log
 
         // Rollback
-        let rolledBackCard = try f.rollback(card: updatedCard, log: log)
+        let rolledBackCard = try fsrs.rollback(card: updatedCard, log: log)
 
         #expect(rolledBackCard.state == originalCard.state)
         #expect(rolledBackCard.reps == originalCard.reps)
@@ -344,7 +344,7 @@ struct FSRSAPITests {
 
     @Test("Rollback throws error for manual rating")
     func testRollbackRejectsManualRating() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createReviewCard()
 
         let log = ReviewLog(
@@ -359,13 +359,13 @@ struct FSRSAPITests {
         )
 
         #expect(throws: FSRSError.self) {
-            _ = try f.rollback(card: card, log: log)
+            _ = try fsrs.rollback(card: card, log: log)
         }
     }
 
     @Test("Rollback decrements lapses when appropriate")
     func testRollbackDecrementsLapses() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = TestCard(
             question: "Test",
             answer: "Test",
@@ -378,11 +378,11 @@ struct FSRSAPITests {
         )
 
         // Review with Again (increases lapses)
-        let result = try f.next(card: card, now: Date(), grade: .again)
+        let result = try fsrs.next(card: card, now: Date(), rating: .again)
         #expect(result.card.lapses == 3)
 
         // Rollback should restore original lapses
-        let rolledBack = try f.rollback(card: result.card, log: result.log)
+        let rolledBack = try fsrs.rollback(card: result.card, log: result.log)
         #expect(rolledBack.lapses == 2)
     }
 
@@ -390,11 +390,11 @@ struct FSRSAPITests {
 
     @Test("Forget resets card to new state")
     func testForgetCard() {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createReviewCard()
         let now = Date()
 
-        let result = f.forget(card: card, now: now)
+        let result = fsrs.forget(card: card, now: now)
 
         #expect(result.card.state == .new)
         #expect(result.card.stability == 0)
@@ -406,7 +406,7 @@ struct FSRSAPITests {
 
     @Test("Forget with resetCount resets reps and lapses")
     func testForgetWithResetCount() {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = TestCard(
             question: "Test",
             answer: "Test",
@@ -417,7 +417,7 @@ struct FSRSAPITests {
             lapses: 3
         )
 
-        let result = f.forget(card: card, now: Date(), resetCount: true)
+        let result = fsrs.forget(card: card, now: Date(), resetCount: true)
 
         #expect(result.card.reps == 0)
         #expect(result.card.lapses == 0)
@@ -425,7 +425,7 @@ struct FSRSAPITests {
 
     @Test("Forget without resetCount preserves reps and lapses")
     func testForgetPreservesCount() {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = TestCard(
             question: "Test",
             answer: "Test",
@@ -436,7 +436,7 @@ struct FSRSAPITests {
             lapses: 3
         )
 
-        let result = f.forget(card: card, now: Date(), resetCount: false)
+        let result = fsrs.forget(card: card, now: Date(), resetCount: false)
 
         #expect(result.card.reps == 10)
         #expect(result.card.lapses == 3)
@@ -444,10 +444,10 @@ struct FSRSAPITests {
 
     @Test("Forget creates manual rating log")
     func testForgetCreatesManualLog() {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createReviewCard()
 
-        let result = f.forget(card: card, now: Date())
+        let result = fsrs.forget(card: card, now: Date())
 
         #expect(result.log.rating == .manual)
     }
@@ -456,11 +456,11 @@ struct FSRSAPITests {
 
     @Test("Forgetting curve returns value between 0 and 1")
     func testForgettingCurveRange() {
-        let f = createFSRS()
+        let fsrs = createFSRS()
 
-        let result1 = f.forgettingCurve(0, 10.0)
-        let result2 = f.forgettingCurve(5, 10.0)
-        let result3 = f.forgettingCurve(100, 10.0)
+        let result1 = fsrs.forgettingCurve(0, 10.0)
+        let result2 = fsrs.forgettingCurve(5, 10.0)
+        let result3 = fsrs.forgettingCurve(100, 10.0)
 
         #expect(result1 >= 0 && result1 <= 1)
         #expect(result2 >= 0 && result2 <= 1)
@@ -469,10 +469,10 @@ struct FSRSAPITests {
 
     @Test("Forgetting curve starts at approximately 0.9")
     func testForgettingCurveStartsHigh() {
-        let f = createFSRS()
+        let fsrs = createFSRS()
 
         // At elapsed=0, retrievability should be close to 0.9 (request retention)
-        let result = f.forgettingCurve(0, 10.0)
+        let result = fsrs.forgettingCurve(0, 10.0)
 
         #expect(result > 0.85)
         #expect(result <= 1.0)
@@ -480,17 +480,17 @@ struct FSRSAPITests {
 
     @Test("Forgetting curve decreases with elapsed days")
     func testForgettingCurveDecreases() {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let stability = 10.0
 
-        let r1 = f.forgettingCurve(1, stability)
-        let r2 = f.forgettingCurve(5, stability)
-        let r3 = f.forgettingCurve(10, stability)
-        let r4 = f.forgettingCurve(20, stability)
+        let result1 = fsrs.forgettingCurve(1, stability)
+        let result2 = fsrs.forgettingCurve(5, stability)
+        let result3 = fsrs.forgettingCurve(10, stability)
+        let result4 = fsrs.forgettingCurve(20, stability)
 
-        #expect(r1 > r2)
-        #expect(r2 > r3)
-        #expect(r3 > r4)
+        #expect(result1 > result2)
+        #expect(result2 > result3)
+        #expect(result3 > result4)
     }
 
     // MARK: - Parameter Tests
@@ -502,47 +502,47 @@ struct FSRSAPITests {
             maximumInterval: 365,
             enableFuzz: false
         )
-        let f: FSRS<TestCard> = fsrs(params: customParams)
+        let fsrs: FSRS<TestCard> = fsrs(params: customParams)
 
-        #expect(f.parameters.requestRetention == 0.85)
-        #expect(f.parameters.maximumInterval == 365)
-        #expect(f.parameters.enableFuzz == false)
+        #expect(fsrs.parameters.requestRetention == 0.85)
+        #expect(fsrs.parameters.maximumInterval == 365)
+        #expect(fsrs.parameters.enableFuzz == false)
     }
 
     @Test("FSRS uses default parameters when not specified")
     func testDefaultParameters() {
-        let f: FSRS<TestCard> = fsrs()
+        let fsrs: FSRS<TestCard> = fsrs()
 
-        #expect(f.parameters.requestRetention > 0)
-        #expect(f.parameters.maximumInterval > 0)
-        #expect(f.parameters.w.count == 21)  // FSRS-6 has 21 parameters
+        #expect(fsrs.parameters.requestRetention > 0)
+        #expect(fsrs.parameters.maximumInterval > 0)
+        #expect(fsrs.parameters.weights.count == 21)  // FSRS-6 has 21 parameters
     }
 
     @Test("Parameters can be updated after initialization")
     func testUpdateParameters() {
-        var f = createFSRS()
-        var params = f.parameters
+        var fsrs = createFSRS()
+        var params = fsrs.parameters
         params.requestRetention = 0.95
-        f.parameters = params
+        fsrs.parameters = params
 
-        #expect(f.parameters.requestRetention == 0.95)
+        #expect(fsrs.parameters.requestRetention == 0.95)
     }
 
     // MARK: - Reschedule Tests
 
     @Test("Reschedule with empty history returns current card")
     func testRescheduleEmptyHistory() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard()
 
-        let result = try f.reschedule(currentCard: card, reviews: [])
+        let result = try fsrs.reschedule(currentCard: card, reviews: [])
 
         #expect(result.collections.isEmpty)
     }
 
     @Test("Reschedule processes review history")
     func testRescheduleWithHistory() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard()
         let baseDate = Date()
 
@@ -556,10 +556,10 @@ struct FSRSAPITests {
                 rating: .good,
                 review: Calendar.current.date(byAdding: .day, value: 1, to: baseDate),
                 state: .learning
-            ),
+            )
         ]
 
-        let result = try f.reschedule(
+        let result = try fsrs.reschedule(
             currentCard: card,
             reviews: history,
             options: RescheduleOptions(skipManual: true)
@@ -570,7 +570,7 @@ struct FSRSAPITests {
 
     @Test("Reschedule skips manual reviews when requested")
     func testRescheduleSkipsManual() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard()
         let baseDate = Date()
 
@@ -583,10 +583,10 @@ struct FSRSAPITests {
             FSRSHistory(
                 rating: .good,
                 review: Calendar.current.date(byAdding: .day, value: 2, to: baseDate),
-                state: .learning),
+                state: .learning)
         ]
 
-        let result = try f.reschedule(
+        let result = try fsrs.reschedule(
             currentCard: card,
             reviews: history,
             options: RescheduleOptions(skipManual: true)
@@ -600,7 +600,7 @@ struct FSRSAPITests {
 
     @Test("Review on due date")
     func testReviewOnDueDate() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let dueDate = Date()
         let card = TestCard(
             question: "Test",
@@ -614,7 +614,7 @@ struct FSRSAPITests {
             reps: 1
         )
 
-        let result = try f.next(card: card, now: dueDate, grade: .good)
+        let result = try fsrs.next(card: card, now: dueDate, rating: .good)
 
         #expect(result.card.reps == 2)
         #expect(result.card.scheduledDays > 0)
@@ -622,7 +622,7 @@ struct FSRSAPITests {
 
     @Test("Review before due date")
     func testReviewBeforeDueDate() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let dueDate = try #require(Calendar.current.date(byAdding: .day, value: 5, to: Date()))
         let card = TestCard(
             question: "Test",
@@ -636,14 +636,14 @@ struct FSRSAPITests {
             reps: 1
         )
 
-        let result = try f.next(card: card, now: Date(), grade: .good)
+        let result = try fsrs.next(card: card, now: Date(), rating: .good)
 
         #expect(result.card.reps == 2)
     }
 
     @Test("Review after due date")
     func testReviewAfterDueDate() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let dueDate = try #require(Calendar.current.date(byAdding: .day, value: -5, to: Date()))
         let card = TestCard(
             question: "Test",
@@ -657,14 +657,14 @@ struct FSRSAPITests {
             reps: 1
         )
 
-        let result = try f.next(card: card, now: Date(), grade: .good)
+        let result = try fsrs.next(card: card, now: Date(), rating: .good)
 
         #expect(result.card.reps == 2)
     }
 
     @Test("Very high stability card")
     func testVeryHighStability() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = TestCard(
             question: "Test",
             answer: "Test",
@@ -675,14 +675,14 @@ struct FSRSAPITests {
             reps: 50
         )
 
-        let result = try f.next(card: card, now: Date(), grade: .good)
+        let result = try fsrs.next(card: card, now: Date(), rating: .good)
 
         #expect(result.card.stability >= card.stability)
     }
 
     @Test("Very high difficulty card")
     func testVeryHighDifficulty() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = TestCard(
             question: "Test",
             answer: "Test",
@@ -693,7 +693,7 @@ struct FSRSAPITests {
             reps: 10
         )
 
-        let result = try f.next(card: card, now: Date(), grade: .good)
+        let result = try fsrs.next(card: card, now: Date(), rating: .good)
 
         #expect(result.card.difficulty >= 1.0)
         #expect(result.card.difficulty <= 10.0)
@@ -701,7 +701,7 @@ struct FSRSAPITests {
 
     @Test("Card with many lapses")
     func testManyLapses() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = TestCard(
             question: "Test",
             answer: "Test",
@@ -713,7 +713,7 @@ struct FSRSAPITests {
             lapses: 10
         )
 
-        let result = try f.next(card: card, now: Date(), grade: .again)
+        let result = try fsrs.next(card: card, now: Date(), rating: .again)
 
         #expect(result.card.lapses == 11)
     }
@@ -722,10 +722,10 @@ struct FSRSAPITests {
 
     @Test("Short-term scheduler enabled uses learning steps")
     func testShortTermScheduler() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         let card = createCard()
 
-        let recordLog = try f.repeat(card: card, now: Date())
+        let recordLog = try fsrs.repeat(card: card, now: Date())
 
         // With short-term enabled, learning steps should be used
         #expect(recordLog[.good]?.card.learningSteps != nil)
@@ -733,10 +733,10 @@ struct FSRSAPITests {
 
     @Test("Long-term scheduler bypasses learning steps")
     func testLongTermScheduler() throws {
-        let f = createFSRS(enableShortTerm: false)
+        let fsrs = createFSRS(enableShortTerm: false)
         let card = createCard()
 
-        let result = try f.next(card: card, now: Date(), grade: .good)
+        let result = try fsrs.next(card: card, now: Date(), rating: .good)
 
         // With short-term disabled, should go directly to review
         #expect(result.card.state == .review)
@@ -746,11 +746,11 @@ struct FSRSAPITests {
 
     @Test("Review log contains correct metadata")
     func testReviewLogMetadata() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard()
         let now = Date()
 
-        let result = try f.next(card: card, now: now, grade: .good)
+        let result = try fsrs.next(card: card, now: now, rating: .good)
         let log = result.log
 
         #expect(log.rating == .good)
@@ -761,10 +761,10 @@ struct FSRSAPITests {
 
     @Test("Review log tracks state transitions")
     func testReviewLogStateTransitions() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard()
 
-        let result = try f.next(card: card, now: Date(), grade: .good)
+        let result = try fsrs.next(card: card, now: Date(), rating: .good)
 
         // Log should contain the old state
         #expect(result.log.state == .new)

@@ -5,14 +5,14 @@ import Foundation
 public struct StabilityCalculator {
     private let parameters: FSRSParameters
     private let logger: (any FSRSLogger)?
-    
+
     public init(parameters: FSRSParameters, logger: (any FSRSLogger)? = nil) {
         self.parameters = parameters
         self.logger = logger
     }
-    
+
     // MARK: - Forgetting Curve
-    
+
     /// Calculate retrievability using the forgetting curve
     /// R(t,S) = (1 + FACTOR × t/(9·S))^DECAY
     ///
@@ -24,20 +24,20 @@ public struct StabilityCalculator {
         elapsedDays: ElapsedDays,
         stability: Stability
     ) throws -> Retrievability {
-        let (decay, factor) = Self.computeDecayFactor(parameters.w)
+        let (decay, factor) = Self.computeDecayFactor(parameters.weights)
         let result = pow(
             1 + (factor * elapsedDays.value) / (RETRIEVABILITY_CURVE_DIVISOR * stability.value),
             decay
         )
-        
+
         let clampedResult = clamp(result, min: 0.0, max: 1.0)
         let retrievability = try Retrievability(roundToFixed(clampedResult))
-        
+
         logger?.info("Forgetting curve: elapsed=\(elapsedDays.value)d, stability=\(stability.value) -> retrievability=\(retrievability.value)")
-        
+
         return retrievability
     }
-    
+
     /// Compute decay factor from parameters
     /// - Parameter weights: Weight parameters array
     /// - Returns: Tuple of (decay, factor)
@@ -46,76 +46,76 @@ public struct StabilityCalculator {
         let factor = exp(pow(decay, -1) * log(RETRIEVABILITY_TARGET)) - 1.0
         return (decay: decay, factor: roundToFixed(factor))
     }
-    
+
     // MARK: - Initial Stability
-    
-    /// Initialize stability for a new card based on grade
-    /// S₀(G) = w[G-1]
+
+    /// Initialize stability for a new card based on rating
+    /// S₀(G) = weights[G-1]
     /// S₀ = max{S₀, 0.1}
     ///
-    /// - Parameter grade: Grade rating (Again, Hard, Good, Easy)
+    /// - Parameter rating: Grade rating (Again, Hard, Good, Easy)
     /// - Returns: Initial stability
-    public func initStability(for grade: Rating) throws -> Stability {
-        let gradeValue = grade.rawValue
+    public func initStability(for rating: Rating) throws -> Stability {
+        let gradeValue = rating.rawValue
         guard gradeValue >= 1 && gradeValue <= 4 else {
-            throw FSRSError.invalidRating("Grade must be Again(1), Hard(2), Good(3), or Easy(4), got \(grade)")
+            throw FSRSError.invalidRating("Grade must be Again(1), Hard(2), Good(3), or Easy(4), got \(rating)")
         }
-        
-        let stabilityValue = max(parameters.w[gradeValue - 1], 0.1)
+
+        let stabilityValue = max(parameters.weights[gradeValue - 1], 0.1)
         let stability = try Stability(stabilityValue)
-        
-        logger?.debug("Initial stability for grade \(grade): \(stability.value)")
-        
+
+        logger?.debug("Initial stability for rating \(rating): \(stability.value)")
+
         return stability
     }
-    
+
     // MARK: - Recall Stability (Success)
-    
+
     /// Calculate next stability after successful recall
-    /// S'_r(D,S,R,G) = S × (e^w[8] × (11-D) × S^(-w[9]) × (e^(w[10]×(1-R))-1) × w[15](if G=2) × w[16](if G=4) + 1)
+    /// S'_r(D,S,R,G) = S × (e^weights[8] × (11-D) × S^(-weights[9]) × (e^(weights[10]×(1-R))-1) × weights[15](if G=2) × weights[16](if G=4) + 1)
     ///
     /// - Parameters:
     ///   - difficulty: Current difficulty
     ///   - stability: Current stability
     ///   - retrievability: Retrievability at time of review
-    ///   - grade: Grade rating
+    ///   - rating: Grade rating
     /// - Returns: New stability after successful recall
     public func nextRecallStability(
         difficulty: Difficulty,
         stability: Stability,
         retrievability: Retrievability,
-        grade: Rating
+        rating: Rating
     ) throws -> Stability {
-        let hardPenalty = (grade == .hard) ? parameters.w[15] : 1.0
-        let easyBonus = (grade == .easy) ? parameters.w[16] : 1.0
-        
+        let hardPenalty = (rating == .hard) ? parameters.weights[15] : 1.0
+        let easyBonus = (rating == .easy) ? parameters.weights[16] : 1.0
+
         let result = stability.value * (
-            1 + exp(parameters.w[8]) *
+            1 + exp(parameters.weights[8]) *
             (DIFFICULTY_CENTER_POINT - difficulty.value) *
-            pow(stability.value, -parameters.w[9]) *
-            (exp((1 - retrievability.value) * parameters.w[10]) - 1) *
+            pow(stability.value, -parameters.weights[9]) *
+            (exp((1 - retrievability.value) * parameters.weights[10]) - 1) *
             hardPenalty *
             easyBonus
         )
-        
+
         let clampedResult = clamp(result, min: S_MIN, max: S_MAX)
         let newStability = try Stability(clampedResult)
-        
+
         logger?.debug("""
             Recall stability: \
             s=\(stability.value) -> \(newStability.value), \
             d=\(difficulty.value), \
             r=\(retrievability.value), \
-            grade=\(grade)
+            rating=\(rating)
             """)
-        
+
         return newStability
     }
-    
+
     // MARK: - Forget Stability (Failure)
-    
+
     /// Calculate next stability after forgetting (Again rating in review state)
-    /// S'_f(D,S,R) = w[11] × D^(-w[12]) × ((S+1)^w[13]-1) × e^(w[14]×(1-R))
+    /// S'_f(D,S,R) = weights[11] × D^(-weights[12]) × ((S+1)^weights[13]-1) × e^(weights[14]×(1-R))
     ///
     /// - Parameters:
     ///   - difficulty: Current difficulty
@@ -127,54 +127,54 @@ public struct StabilityCalculator {
         stability: Stability,
         retrievability: Retrievability
     ) throws -> Stability {
-        let result = parameters.w[11] *
-            pow(difficulty.value, -parameters.w[12]) *
-            (pow(stability.value + 1, parameters.w[13]) - 1) *
-            exp((1 - retrievability.value) * parameters.w[14])
-        
+        let result = parameters.weights[11] *
+            pow(difficulty.value, -parameters.weights[12]) *
+            (pow(stability.value + 1, parameters.weights[13]) - 1) *
+            exp((1 - retrievability.value) * parameters.weights[14])
+
         let clampedResult = clamp(result, min: S_MIN, max: S_MAX)
         let newStability = try Stability(clampedResult)
-        
+
         logger?.debug("""
             Forget stability: \
             s=\(stability.value) -> \(newStability.value), \
             d=\(difficulty.value), \
             r=\(retrievability.value)
             """)
-        
+
         return newStability
     }
-    
+
     // MARK: - Short-term Stability
-    
+
     /// Calculate next short-term stability (for learning/relearning steps)
-    /// S'_s(S,G) = S × (S^(-w[19]) × e^(w[17] × (G-3+w[18])))
+    /// S'_s(S,G) = S × (S^(-weights[19]) × e^(weights[17] × (G-3+weights[18])))
     ///
     /// - Parameters:
     ///   - stability: Current stability
-    ///   - grade: Grade rating
+    ///   - rating: Grade rating
     /// - Returns: New short-term stability
     public func nextShortTermStability(
         stability: Stability,
-        grade: Rating
+        rating: Rating
     ) throws -> Stability {
-        let gradeValue = Double(grade.rawValue)
-        let sinc = pow(stability.value, -parameters.w[19]) *
-            exp(parameters.w[17] * (gradeValue - GRADE_NEUTRAL_VALUE + parameters.w[18]))
-        
-        // Apply mask: if grade >= Good (3), sinc should be at least 1.0
+        let gradeValue = Double(rating.rawValue)
+        let sinc = pow(stability.value, -parameters.weights[19]) *
+            exp(parameters.weights[17] * (gradeValue - GRADE_NEUTRAL_VALUE + parameters.weights[18]))
+
+        // Apply mask: if rating >= Good (3), sinc should be at least 1.0
         let maskedSinc = gradeValue >= GRADE_NEUTRAL_VALUE ? max(sinc, 1.0) : sinc
         let result = stability.value * maskedSinc
-        
+
         let clampedResult = clamp(result, min: S_MIN, max: S_MAX)
         let newStability = try Stability(clampedResult)
-        
+
         logger?.debug("""
             Short-term stability: \
             s=\(stability.value) -> \(newStability.value), \
-            grade=\(grade)
+            rating=\(rating)
             """)
-        
+
         return newStability
     }
 }

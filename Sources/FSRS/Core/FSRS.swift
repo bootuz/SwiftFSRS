@@ -103,19 +103,19 @@ public struct FSRS<Card: FSRSCard> {
         return try scheduler.preview()
     }
 
-    /// Get next state for specific grade
+    /// Get next state for specific rating
     ///
     /// - Parameters:
     ///   - card: Card to process
     ///   - now: Current time
-    ///   - grade: Grade rating (Again, Hard, Good, or Easy)
+    ///   - rating: Grade rating (Again, Hard, Good, or Easy)
     /// - Returns: Record log item with next card state
     /// - Throws: FSRSError if any operation fails
-    public func next(card: Card, now: Date, grade: Rating) throws -> RecordLogItem<Card> {
-        logger?.debug("Processing next: grade=\(grade), state=\(card.state)")
+    public func next(card: Card, now: Date, rating: Rating) throws -> RecordLogItem<Card> {
+        logger?.debug("Processing next: rating=\(rating), state=\(card.state)")
 
-        guard grade != .manual else {
-            logger?.error("Manual grade not allowed for scheduling")
+        guard rating != .manual else {
+            logger?.error("Manual rating not allowed for scheduling")
             throw FSRSError.manualGradeNotAllowed
         }
 
@@ -126,7 +126,7 @@ public struct FSRS<Card: FSRSCard> {
             useShortTerm: useShortTerm,
             logger: logger
         )
-        return try scheduler.review(grade: grade)
+        return try scheduler.review(rating: rating)
     }
 
     // MARK: - Retrievability Methods

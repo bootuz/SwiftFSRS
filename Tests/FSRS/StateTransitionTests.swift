@@ -33,13 +33,13 @@ struct StateTransitionTests {
         "New + Again → Learning",
         arguments: [
             (false, State.review),
-            (true, State.learning),
+            (true, State.learning)
         ])
     func testNewToLearningWithAgain(enableShortTirm: Bool, state: State) throws {
-        let f = createFSRS(enableShortTerm: enableShortTirm)
+        let fsrs = createFSRS(enableShortTerm: enableShortTirm)
         let card = createCard(state: .new)
 
-        let result = try f.next(card: card, now: Date(), grade: .again)
+        let result = try fsrs.next(card: card, now: Date(), rating: .again)
 
         #expect(result.card.state == state)
         #expect(result.card.reps == 1)
@@ -50,10 +50,10 @@ struct StateTransitionTests {
 
     @Test("New + Hard → Learning")
     func testNewToLearningWithHard() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         let card = createCard(state: .new)
 
-        let result = try f.next(card: card, now: Date(), grade: .hard)
+        let result = try fsrs.next(card: card, now: Date(), rating: .hard)
 
         #expect(result.card.state == .learning)
         #expect(result.card.reps == 1)
@@ -61,10 +61,10 @@ struct StateTransitionTests {
 
     @Test("New + Good → Learning (with short-term)")
     func testNewToLearningWithGood() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         let card = createCard(state: .new)
 
-        let result = try f.next(card: card, now: Date(), grade: .good)
+        let result = try fsrs.next(card: card, now: Date(), rating: .good)
 
         #expect(result.card.state == .learning)
         #expect(result.card.reps == 1)
@@ -72,10 +72,10 @@ struct StateTransitionTests {
 
     @Test("New + Good → Review (without short-term)")
     func testNewToReviewWithGoodNoShortTerm() throws {
-        let f = createFSRS(enableShortTerm: false)
+        let fsrs = createFSRS(enableShortTerm: false)
         let card = createCard(state: .new)
 
-        let result = try f.next(card: card, now: Date(), grade: .good)
+        let result = try fsrs.next(card: card, now: Date(), rating: .good)
 
         #expect(result.card.state == .review)
         #expect(result.card.reps == 1)
@@ -84,10 +84,10 @@ struct StateTransitionTests {
 
     @Test("New + Easy → Review")
     func testNewToReviewWithEasy() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard(state: .new)
 
-        let result = try f.next(card: card, now: Date(), grade: .easy)
+        let result = try fsrs.next(card: card, now: Date(), rating: .easy)
 
         #expect(result.card.state == .review)
         #expect(result.card.reps == 1)
@@ -98,7 +98,7 @@ struct StateTransitionTests {
 
     @Test("Learning + Again → Learning (restart)")
     func testLearningToLearningWithAgain() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         let card = TestCard(
             question: "Test",
             answer: "Test",
@@ -109,7 +109,7 @@ struct StateTransitionTests {
             reps: 1
         )
 
-        let result = try f.next(card: card, now: Date(), grade: .again)
+        let result = try fsrs.next(card: card, now: Date(), rating: .again)
 
         #expect(result.card.state == .learning)
         #expect(result.card.learningSteps == 0)
@@ -117,7 +117,7 @@ struct StateTransitionTests {
 
     @Test("Learning + Good → Learning or Review (progress)")
     func testLearningProgressWithGood() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         let card = TestCard(
             question: "Test",
             answer: "Test",
@@ -128,7 +128,7 @@ struct StateTransitionTests {
             reps: 1
         )
 
-        let result = try f.next(card: card, now: Date(), grade: .good)
+        let result = try fsrs.next(card: card, now: Date(), rating: .good)
 
         // Should progress in learning or graduate
         #expect(result.card.state == .review)
@@ -139,7 +139,7 @@ struct StateTransitionTests {
 
     @Test("Learning + Easy → Review (graduate early)")
     func testLearningToReviewWithEasy() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         let card = TestCard(
             question: "Test",
             answer: "Test",
@@ -150,7 +150,7 @@ struct StateTransitionTests {
             reps: 1
         )
 
-        let result = try f.next(card: card, now: Date(), grade: .easy)
+        let result = try fsrs.next(card: card, now: Date(), rating: .easy)
 
         #expect(result.card.state == .review)
         #expect(result.card.scheduledDays > 0)
@@ -160,10 +160,10 @@ struct StateTransitionTests {
 
     @Test("Review + Again → Relearning")
     func testReviewToRelearningWithAgain() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         let card = createCard(state: .review)
 
-        let result = try f.next(card: card, now: Date(), grade: .again)
+        let result = try fsrs.next(card: card, now: Date(), rating: .again)
 
         #expect(result.card.state == .relearning)
         #expect(result.card.lapses == 1)
@@ -171,10 +171,10 @@ struct StateTransitionTests {
 
     @Test("Review + Hard → Review")
     func testReviewToReviewWithHard() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard(state: .review)
 
-        let result = try f.next(card: card, now: Date(), grade: .hard)
+        let result = try fsrs.next(card: card, now: Date(), rating: .hard)
 
         #expect(result.card.state == .review)
         #expect(result.card.reps == 4)
@@ -183,10 +183,10 @@ struct StateTransitionTests {
 
     @Test("Review + Good → Review")
     func testReviewToReviewWithGood() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard(state: .review)
 
-        let result = try f.next(card: card, now: Date(), grade: .good)
+        let result = try fsrs.next(card: card, now: Date(), rating: .good)
 
         #expect(result.card.state == .review)
         #expect(result.card.reps == 4)
@@ -196,10 +196,10 @@ struct StateTransitionTests {
 
     @Test("Review + Easy → Review")
     func testReviewToReviewWithEasy() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard(state: .review)
 
-        let result = try f.next(card: card, now: Date(), grade: .easy)
+        let result = try fsrs.next(card: card, now: Date(), rating: .easy)
 
         #expect(result.card.state == .review)
         #expect(result.card.reps == 4)
@@ -210,7 +210,7 @@ struct StateTransitionTests {
 
     @Test("Relearning + Again → Relearning (restart)")
     func testRelearningToRelearningWithAgain() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         let card = TestCard(
             question: "Test",
             answer: "Test",
@@ -222,7 +222,7 @@ struct StateTransitionTests {
             lapses: 1
         )
 
-        let result = try f.next(card: card, now: Date(), grade: .again)
+        let result = try fsrs.next(card: card, now: Date(), rating: .again)
 
         // State can be relearning or review depending on short-term configuration
         #expect(result.card.state == .relearning || result.card.state == .review)
@@ -231,7 +231,7 @@ struct StateTransitionTests {
 
     @Test("Relearning + Good → Relearning or Review (progress)")
     func testRelearningProgressWithGood() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         let card = TestCard(
             question: "Test",
             answer: "Test",
@@ -243,14 +243,14 @@ struct StateTransitionTests {
             lapses: 1
         )
 
-        let result = try f.next(card: card, now: Date(), grade: .good)
+        let result = try fsrs.next(card: card, now: Date(), rating: .good)
 
         #expect(result.card.reps == 6)
     }
 
     @Test("Relearning + Easy → Review (graduate)")
     func testRelearningToReviewWithEasy() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         let card = TestCard(
             question: "Test",
             answer: "Test",
@@ -262,7 +262,7 @@ struct StateTransitionTests {
             lapses: 1
         )
 
-        let result = try f.next(card: card, now: Date(), grade: .easy)
+        let result = try fsrs.next(card: card, now: Date(), rating: .easy)
 
         #expect(result.card.state == .review)
     }
@@ -271,7 +271,7 @@ struct StateTransitionTests {
 
     @Test("Lapses increment only on Review → Relearning")
     func testLapsesIncrementOnReviewFailure() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = TestCard(
             question: "Test",
             answer: "Test",
@@ -282,14 +282,14 @@ struct StateTransitionTests {
             lapses: 3
         )
 
-        let result = try f.next(card: card, now: Date(), grade: .again)
+        let result = try fsrs.next(card: card, now: Date(), rating: .again)
 
         #expect(result.card.lapses == 4)
     }
 
     @Test("Lapses do not increment on Learning failure")
     func testLapsesNotIncrementOnLearningFailure() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         let card = TestCard(
             question: "Test",
             answer: "Test",
@@ -300,14 +300,14 @@ struct StateTransitionTests {
             lapses: 0
         )
 
-        let result = try f.next(card: card, now: Date(), grade: .again)
+        let result = try fsrs.next(card: card, now: Date(), rating: .again)
 
         #expect(result.card.lapses == 0)
     }
 
     @Test("Lapses persist through successful reviews")
     func testLapsesPersistThroughSuccessfulReviews() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = TestCard(
             question: "Test",
             answer: "Test",
@@ -318,7 +318,7 @@ struct StateTransitionTests {
             lapses: 5
         )
 
-        let result = try f.next(card: card, now: Date(), grade: .good)
+        let result = try fsrs.next(card: card, now: Date(), rating: .good)
 
         #expect(result.card.lapses == 5)
     }
@@ -327,31 +327,31 @@ struct StateTransitionTests {
 
     @Test("Stability increases on successful review")
     func testStabilityIncreasesOnSuccess() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard(state: .review)
         let initialStability = card.stability
 
-        let result = try f.next(card: card, now: Date(), grade: .good)
+        let result = try fsrs.next(card: card, now: Date(), rating: .good)
         #expect(result.card.stability >= initialStability)
     }
 
     @Test("Stability decreases on failure")
     func testStabilityDecreasesOnFailure() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard(state: .review)
         let initialStability = card.stability
 
-        let result = try f.next(card: card, now: Date(), grade: .again)
+        let result = try fsrs.next(card: card, now: Date(), rating: .again)
 
         #expect(result.card.stability < initialStability)
     }
 
     @Test("Easy rating produces highest stability")
     func testEasyProducesHighestStability() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         let card = createCard(state: .review)
 
-        let recordLog = try f.repeat(card: card, now: Date())
+        let recordLog = try fsrs.repeat(card: card, now: Date())
 
         // swiftlint:disable:next force_unwrapping
         let againStability = recordLog[.again]!.card.stability
@@ -371,18 +371,18 @@ struct StateTransitionTests {
 
     @Test("Difficulty increases on Again rating")
     func testDifficultyIncreasesOnAgain() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard(state: .review)
         let initialDifficulty = card.difficulty
 
-        let result = try f.next(card: card, now: Date(), grade: .again)
+        let result = try fsrs.next(card: card, now: Date(), rating: .again)
 
         #expect(result.card.difficulty > initialDifficulty)
     }
 
     @Test("Difficulty decreases on Easy rating")
     func testDifficultyDecreasesOnEasy() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = TestCard(
             question: "Test",
             answer: "Test",
@@ -393,14 +393,14 @@ struct StateTransitionTests {
         )
         let initialDifficulty = card.difficulty
 
-        let result = try f.next(card: card, now: Date(), grade: .easy)
+        let result = try fsrs.next(card: card, now: Date(), rating: .easy)
 
         #expect(result.card.difficulty <= initialDifficulty)
     }
 
     @Test("Difficulty stays within valid range")
     func testDifficultyBounds() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
 
         // Test with very high difficulty
         let hardCard = TestCard(
@@ -412,7 +412,7 @@ struct StateTransitionTests {
             reps: 50
         )
 
-        let resultHard = try f.next(card: hardCard, now: Date(), grade: .again)
+        let resultHard = try fsrs.next(card: hardCard, now: Date(), rating: .again)
         #expect(resultHard.card.difficulty >= 1.0)
         #expect(resultHard.card.difficulty <= 10.0)
 
@@ -426,7 +426,7 @@ struct StateTransitionTests {
             reps: 50
         )
 
-        let resultEasy = try f.next(card: easyCard, now: Date(), grade: .easy)
+        let resultEasy = try fsrs.next(card: easyCard, now: Date(), rating: .easy)
         #expect(resultEasy.card.difficulty >= 1.0)
         #expect(resultEasy.card.difficulty <= 10.0)
     }
@@ -435,13 +435,13 @@ struct StateTransitionTests {
 
     @Test("Scheduled days increase with stability")
     func testScheduledDaysIncreaseWithStability() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let card = createCard(state: .review)
 
         var currentCard = card
 
         for _ in 0..<3 {
-            let result = try f.next(card: currentCard, now: Date(), grade: .good)
+            let result = try fsrs.next(card: currentCard, now: Date(), rating: .good)
             let newScheduledDays = result.card.scheduledDays
 
             // Scheduled days should generally increase with successful reviews
@@ -453,10 +453,10 @@ struct StateTransitionTests {
 
     @Test("Scheduled days are zero for learning state")
     func testLearningStateScheduledDays() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         let card = createCard(state: .new)
 
-        let result = try f.next(card: card, now: Date(), grade: .good)
+        let result = try fsrs.next(card: card, now: Date(), rating: .good)
 
         if result.card.state == .learning {
             #expect(result.card.scheduledDays == 0)
@@ -467,26 +467,26 @@ struct StateTransitionTests {
 
     @Test("Complete lifecycle: New → Learning → Review")
     func testCompleteLifecycle() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         var card = TestCard(question: "Test", answer: "Test")
         var now = Date()
 
         // New → Learning
         #expect(card.state == .new)
-        var result = try f.next(card: card, now: now, grade: .good)
+        var result = try fsrs.next(card: card, now: now, rating: .good)
         card = result.card
         #expect(card.state == .learning)
         #expect(card.reps == 1)
 
         // Progress through learning steps
         now = try #require(Calendar.current.date(byAdding: .minute, value: 10, to: now))
-        result = try f.next(card: card, now: now, grade: .good)
+        result = try fsrs.next(card: card, now: now, rating: .good)
         card = result.card
 
         // Eventually reach Review
         if card.state == .learning {
             now = try #require(Calendar.current.date(byAdding: .hour, value: 1, to: now))
-            result = try f.next(card: card, now: now, grade: .good)
+            result = try fsrs.next(card: card, now: now, rating: .good)
             card = result.card
         }
 
@@ -497,7 +497,7 @@ struct StateTransitionTests {
 
     @Test("Failed review lifecycle: Review → Relearning → Review")
     func testFailedReviewLifecycle() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         var card = createCard(state: .review)
         let now = Date()
 
@@ -505,14 +505,14 @@ struct StateTransitionTests {
         #expect(card.state == .review)
         #expect(card.lapses == 0)
 
-        var result = try f.next(card: card, now: now, grade: .again)
+        var result = try fsrs.next(card: card, now: now, rating: .again)
         card = result.card
 
         #expect(card.state == .relearning)
         #expect(card.lapses == 1)
 
         // Relearning → Review (recovery)
-        result = try f.next(card: card, now: now, grade: .easy)
+        result = try fsrs.next(card: card, now: now, rating: .easy)
         card = result.card
 
         #expect(card.state == .review)
@@ -521,24 +521,24 @@ struct StateTransitionTests {
 
     @Test("Multiple failures accumulate lapses")
     func testMultipleFailuresAccumulateLapses() throws {
-        let f = createFSRS(enableShortTerm: true)
+        let fsrs = createFSRS(enableShortTerm: true)
         var card = createCard(state: .review)
         var now = Date()
 
         // First failure
-        var result = try f.next(card: card, now: now, grade: .again)
+        var result = try fsrs.next(card: card, now: now, rating: .again)
         card = result.card
         #expect(card.lapses == 1)
 
         // Graduate back to review
-        result = try f.next(card: card, now: now, grade: .easy)
+        result = try fsrs.next(card: card, now: now, rating: .easy)
         card = result.card
         #expect(card.state == .review)
         #expect(card.lapses == 1)
 
         // Second failure
         now = try #require(Calendar.current.date(byAdding: .day, value: 1, to: now))
-        result = try f.next(card: card, now: now, grade: .again)
+        result = try fsrs.next(card: card, now: now, rating: .again)
         card = result.card
         #expect(card.lapses == 2)
     }

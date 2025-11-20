@@ -8,10 +8,10 @@ import Foundation
 
 /// Alea PRNG state
 public struct AleaState {
-    var c: UInt32
-    var s0: Double
-    var s1: Double
-    var s2: Double
+    var c: UInt32    // swiftlint:disable:this identifier_name
+    var s0: Double   // swiftlint:disable:this identifier_name
+    var s1: Double   // swiftlint:disable:this identifier_name
+    var s2: Double   // swiftlint:disable:this identifier_name
 }
 
 /// Type-safe seed value for Alea PRNG
@@ -20,11 +20,11 @@ public enum AleaSeed: Sendable {
     case double(Double)
     case int(Int)
 
-    fileprivate var hashableValue: String {
+    var hashableValue: String {
         switch self {
-        case .string(let s):
+        case .string(let s): // swiftlint:disable:this identifier_name
             return s
-        case .double(let d):
+        case .double(let d): // swiftlint:disable:this identifier_name
             return String(describing: d)
         case .int(let i):
             return String(describing: i)
@@ -34,13 +34,13 @@ public enum AleaSeed: Sendable {
 
 /// Alea PRNG implementation
 private final class Alea: @unchecked Sendable {
-    private var c: UInt32 = 1
-    private var s0: Double = 0
-    private var s1: Double = 0
-    private var s2: Double = 0
+    private var c: UInt32 = 1 // swiftlint:disable:this identifier_name
+    private var s0: Double = 0 // swiftlint:disable:this identifier_name
+    private var s1: Double = 0 // swiftlint:disable:this identifier_name
+    private var s2: Double = 0 // swiftlint:disable:this identifier_name
 
     init(seed: AleaSeed? = nil) {
-        let mash = Mash()
+        let mash = mash()
         self.c = 1
         self.s0 = mash(" ")
         self.s1 = mash(" ")
@@ -56,7 +56,7 @@ private final class Alea: @unchecked Sendable {
     }
 
     func next() -> Double {
-        let t = 2_091_639.0 * s0 + Double(c) * 2.3283064365386963e-10  // 2^-32
+        let t = 2_091_639.0 * s0 + Double(c) * 2.3283064365386963e-10  // 2^-32 swiftlint:disable:this identifier_name
         s0 = s1
         s1 = s2
         c = UInt32(t)
@@ -78,13 +78,13 @@ private final class Alea: @unchecked Sendable {
 }
 
 /// Mash function for seed hashing
-private func Mash() -> (String) -> Double {
-    var n: UInt32 = 0xefc8_249d
+private func mash() -> (String) -> Double {
+    var n: UInt32 = 0xefc8_249d // swiftlint:disable:this identifier_name
 
     return { dataString in
         for char in dataString.utf8 {
             n = n &+ UInt32(char)
-            var h = 0.02519603282416938 * Double(n)
+            var h = 0.02519603282416938 * Double(n) // swiftlint:disable:this identifier_name
             n = UInt32(h)
             h -= Double(n)
             h *= Double(n)
@@ -100,7 +100,7 @@ private func Mash() -> (String) -> Double {
 /// - Parameter seed: Optional seed. Defaults to current timestamp.
 /// - Returns: PRNG function
 public func alea(seed: AleaSeed? = nil) -> () -> Double {
-    let xg = Alea(seed: seed)
+    let xg = Alea(seed: seed) // swiftlint:disable:this identifier_name
 
     func prng() -> Double {
         xg.next()

@@ -5,8 +5,8 @@ import Foundation
 public final class LongTermScheduler<Card: FSRSCard>: BaseScheduler<Card> {
     // MARK: - New Card Scheduling
 
-    override public func scheduleNewCard(grade: Rating) throws -> RecordLogItem<Card> {
-        logger?.debug("Long-term new card: grade=\(grade)")
+    override public func scheduleNewCard(rating: Rating) throws -> RecordLogItem<Card> {
+        logger?.debug("Long-term new card: rating=\(rating)")
 
         // Calculate next states for all grades
         let nextStates = try calculateAllGradeStates(
@@ -27,9 +27,9 @@ public final class LongTermScheduler<Card: FSRSCard>: BaseScheduler<Card> {
             cardEasy: &cardEasy
         )
 
-        // Select card based on actual grade
+        // Select card based on actual rating
         let selectedCard = try selectCard(
-            grade: grade,
+            rating: rating,
             again: cardAgain,
             hard: cardHard,
             good: cardGood,
@@ -37,21 +37,21 @@ public final class LongTermScheduler<Card: FSRSCard>: BaseScheduler<Card> {
         )
 
         logger?.debug("New card result: scheduledDays=\(selectedCard.scheduledDays)")
-        return RecordLogItem(card: selectedCard, log: buildLog(rating: grade))
+        return RecordLogItem(card: selectedCard, log: buildLog(rating: rating))
     }
 
     // MARK: - Learning/Relearning Scheduling
 
-    override public func scheduleLearningCard(grade: Rating) throws -> RecordLogItem<Card> {
+    override public func scheduleLearningCard(rating: Rating) throws -> RecordLogItem<Card> {
         // In long-term mode, learning state is treated same as review
-        logger?.debug("Long-term learning: treating as review, grade=\(grade)")
-        return try scheduleReviewCard(grade: grade)
+        logger?.debug("Long-term learning: treating as review, rating=\(rating)")
+        return try scheduleReviewCard(rating: rating)
     }
 
     // MARK: - Review Card Scheduling
 
-    override public func scheduleReviewCard(grade: Rating) throws -> RecordLogItem<Card> {
-        logger?.debug("Long-term review: grade=\(grade)")
+    override public func scheduleReviewCard(rating: Rating) throws -> RecordLogItem<Card> {
+        logger?.debug("Long-term review: rating=\(rating)")
 
         // Calculate retrievability
         let currentStability = try Stability(currentCard.stability)
@@ -84,9 +84,9 @@ public final class LongTermScheduler<Card: FSRSCard>: BaseScheduler<Card> {
         // Increment lapses for Again
         cardAgain.lapses += 1
 
-        // Select card based on actual grade
+        // Select card based on actual rating
         let selectedCard = try selectCard(
-            grade: grade,
+            rating: rating,
             again: cardAgain,
             hard: cardHard,
             good: cardGood,
@@ -94,7 +94,7 @@ public final class LongTermScheduler<Card: FSRSCard>: BaseScheduler<Card> {
         )
 
         logger?.debug("Review result: scheduledDays=\(selectedCard.scheduledDays)")
-        return RecordLogItem(card: selectedCard, log: buildLog(rating: grade))
+        return RecordLogItem(card: selectedCard, log: buildLog(rating: rating))
     }
 
     // MARK: - Helper Methods
@@ -113,22 +113,22 @@ public final class LongTermScheduler<Card: FSRSCard>: BaseScheduler<Card> {
         AllGradeStates(
             again: try calculateNextMemoryState(
                 elapsedDays: elapsedDays,
-                grade: .again,
+                rating: .again,
                 retrievability: retrievability
             ),
             hard: try calculateNextMemoryState(
                 elapsedDays: elapsedDays,
-                grade: .hard,
+                rating: .hard,
                 retrievability: retrievability
             ),
             good: try calculateNextMemoryState(
                 elapsedDays: elapsedDays,
-                grade: .good,
+                rating: .good,
                 retrievability: retrievability
             ),
             easy: try calculateNextMemoryState(
                 elapsedDays: elapsedDays,
-                grade: .easy,
+                rating: .easy,
                 retrievability: retrievability
             )
         )
@@ -240,13 +240,13 @@ public final class LongTermScheduler<Card: FSRSCard>: BaseScheduler<Card> {
     }
 
     private func selectCard(
-        grade: Rating,
+        rating: Rating,
         again: Card,
         hard: Card,
         good: Card,
         easy: Card
     ) throws -> Card {
-        switch grade {
+        switch rating {
         case .again:
             return again
         case .hard:

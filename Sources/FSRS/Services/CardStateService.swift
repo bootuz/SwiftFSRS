@@ -4,13 +4,12 @@ import Foundation
 /// Handles rollback and forget operations
 public struct CardStateService<Card: FSRSCard> {
     private let logger: (any FSRSLogger)?
-    
+
     public init(logger: (any FSRSLogger)? = nil) {
         self.logger = logger
     }
-    
+
     // MARK: - Rollback
-    
     /// Rollback a card to its previous state before a review
     ///
     /// - Parameters:
@@ -23,14 +22,14 @@ public struct CardStateService<Card: FSRSCard> {
             logger?.error("Cannot rollback manual rating")
             throw FSRSError.manualGradeNotAllowed
         }
-        
+
         logger?.warning("Rolling back card: \(card.state) -> \(log.state), rating=\(log.rating)")
-        
+
         let (previousDue, previousLastReview, previousLapses) = calculatePreviousState(
             card: card,
             log: log
         )
-        
+
         var previousCard = card
         previousCard.due = previousDue
         previousCard.stability = log.stability
@@ -41,15 +40,15 @@ public struct CardStateService<Card: FSRSCard> {
         previousCard.lapses = previousLapses
         previousCard.state = log.state
         previousCard.lastReview = previousLastReview
-        
+
         return previousCard
     }
-    
+
     /// Calculate the previous state values from review log
     private func calculatePreviousState(
         card: Card,
         log: ReviewLog
-    ) -> (due: Date, lastReview: Date?, lapses: Int) {
+    ) -> (due: Date, lastReview: Date?, lapses: Int) { // swiftlint:disable:this large_tuple
         switch log.state {
         case .new:
             return (
@@ -57,7 +56,7 @@ public struct CardStateService<Card: FSRSCard> {
                 lastReview: nil,
                 lapses: 0
             )
-            
+
         case .learning, .relearning, .review:
             let lapseAdjustment = (log.rating == .again && log.state == .review) ? 1 : 0
             return (
@@ -67,9 +66,9 @@ public struct CardStateService<Card: FSRSCard> {
             )
         }
     }
-    
+
     // MARK: - Forget
-    
+
     /// Forget a card (reset to new state)
     ///
     /// - Parameters:
@@ -83,7 +82,7 @@ public struct CardStateService<Card: FSRSCard> {
         resetCount: Bool = false
     ) -> RecordLogItem<Card> {
         logger?.warning("Forgetting card: state=\(card.state), resetCount=\(resetCount)")
-        
+
         // Calculate scheduled days based on current state
         let scheduledDays: Int
         if card.state == .new {
@@ -95,7 +94,7 @@ public struct CardStateService<Card: FSRSCard> {
                 unit: CalculationTimeUnit.days
             ))
         }
-        
+
         // Create review log for forget operation
         let forgetLog = ReviewLog(
             rating: .manual,
@@ -107,7 +106,7 @@ public struct CardStateService<Card: FSRSCard> {
             learningSteps: card.learningSteps,
             review: now
         )
-        
+
         // Reset card to new state
         var forgottenCard = card
         forgottenCard.due = now
@@ -116,14 +115,14 @@ public struct CardStateService<Card: FSRSCard> {
         forgottenCard.scheduledDays = 0
         forgottenCard.learningSteps = 0
         forgottenCard.state = .new
-        
+
         // Optionally reset counters
         if resetCount {
             forgottenCard.reps = 0
             forgottenCard.lapses = 0
         }
         // Note: lastReview is intentionally preserved
-        
+
         return RecordLogItem(card: forgottenCard, log: forgetLog)
     }
 }

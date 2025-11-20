@@ -78,7 +78,7 @@ public struct StrategyManager: Sendable {
     public var seedStrategy: (any SeedStrategyProtocol)?
     public var learningStepsStrategy: (any LearningStepsStrategyProtocol)?
     public var schedulerStrategy: (any SchedulerStrategyProtocol)?
-    
+
     public init(
         seedStrategy: (any SeedStrategyProtocol)? = nil,
         learningStepsStrategy: (any LearningStepsStrategyProtocol)? = nil,
@@ -88,7 +88,7 @@ public struct StrategyManager: Sendable {
         self.learningStepsStrategy = learningStepsStrategy
         self.schedulerStrategy = schedulerStrategy
     }
-    
+
     /// Clear all strategies
     public mutating func clearAll() {
         seedStrategy = nil

@@ -30,7 +30,7 @@ public func dateScheduler(now: Date, offset: Double, isDay: Bool) -> Date {
 /// - Returns: Difference in specified unit
 public func dateDiff(now: Date, previous: Date, unit: CalculationTimeUnit) -> Double {
     let diff = now.timeIntervalSince(previous)
-    
+
     switch unit {
     case .days:
         return floor(diff / (24 * 60 * 60))
@@ -74,15 +74,15 @@ public func showDiffMessage(
 ) -> String {
     var diff = due.timeIntervalSince(lastReview)
     let timeUnits: [TimeInterval] = [60, 60, 24, 31, 12]
-    
+
     var i = 0
     diff /= 1_000 // Convert to seconds
-    
+
     while i < timeUnits.count && diff >= timeUnits[i] {
         diff /= timeUnits[i]
         i += 1
     }
-    
+
     let value = Int(floor(diff))
     if unit && i < timeUnit.count {
         return "\(value)\(timeUnit[i])"

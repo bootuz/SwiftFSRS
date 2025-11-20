@@ -13,8 +13,8 @@ struct TestCard: FSRSCard {
     let answer: String
     let tags: [String]
     let notes: String?
-    
-    
+
+
     var due: Date
     var state: State
     var lastReview: Date?
@@ -24,7 +24,7 @@ struct TestCard: FSRSCard {
     var learningSteps: Int
     var reps: Int
     var lapses: Int
-    
+
     init(
         id: UUID = UUID(),
         question: String,

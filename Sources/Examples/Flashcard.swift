@@ -143,4 +143,4 @@ try jsonData.write(to: fileURL)
 
 // Load and continue scheduling
 let loaded = try JSONDecoder().decode(Flashcard.self, from: jsonData)
-let nextReview = try fsrs.next(card: loaded, now: Date(), grade: .good)
+let nextReview = try fsrs.next(card: loaded, now: Date(), rating: .good)

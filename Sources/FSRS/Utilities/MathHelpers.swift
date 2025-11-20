@@ -21,7 +21,7 @@ private struct FuzzRange {
 private let fuzzRanges: [FuzzRange] = [
     FuzzRange(start: 2.5, end: 7.0, factor: 0.15),
     FuzzRange(start: 7.0, end: 20.0, factor: 0.1),
-    FuzzRange(start: 20.0, end: Double.infinity, factor: 0.05),
+    FuzzRange(start: 20.0, end: Double.infinity, factor: 0.05)
 ]
 
 /// Get fuzz range for interval
@@ -37,23 +37,23 @@ public func getFuzzRange(
 ) -> (min: Int, max: Int) {
     var delta = 1.0
     let maxIntervalDouble = Double(maximumInterval)
-    
+
     for range in fuzzRanges {
         let rangeEnd = Swift.min(interval, range.end)
         let rangeStart = Swift.max(range.start, 0.0)
         delta += range.factor * Swift.max(rangeEnd - rangeStart, 0.0)
     }
-    
+
     let clampedInterval = Swift.min(interval, maxIntervalDouble)
     var minIvl = Swift.max(2, Int(round(clampedInterval - delta)))
     let maxIvl = Swift.min(Int(round(clampedInterval + delta)), maximumInterval)
-    
+
     if interval > elapsedDays {
         minIvl = Swift.max(minIvl, Int(elapsedDays) + 1)
     }
-    
+
     minIvl = Swift.min(minIvl, maxIvl)
-    
+
     return (min: minIvl, max: maxIvl)
 }
 

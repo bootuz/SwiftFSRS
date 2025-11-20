@@ -4,7 +4,7 @@ import Foundation
 public struct RescheduleService<Card: FSRSCard> {
     private let fsrs: FSRS<Card>
     private let logger: (any FSRSLogger)?
-    
+
     /// Initialize Reschedule service
     /// - Parameters:
     ///   - fsrs: FSRS instance
@@ -14,7 +14,7 @@ public struct RescheduleService<Card: FSRSCard> {
         self.logger = logger
         logger?.debug("Reschedule service initialized")
     }
-    
+
     /// Replay a review
     /// - Parameters:
     ///   - card: Card being reviewed
@@ -23,9 +23,9 @@ public struct RescheduleService<Card: FSRSCard> {
     /// - Returns: Record log item
     /// - Throws: FSRSError if any operation fails
     public func replay(card: Card, reviewed: Date, rating: Rating) throws -> RecordLogItem<Card> {
-        try fsrs.next(card: card, now: reviewed, grade: rating)
+        try fsrs.next(card: card, now: reviewed, rating: rating)
     }
-    
+
     /// Handle manual rating
     /// - Parameters:
     ///   - card: Card being reviewed
@@ -44,7 +44,7 @@ public struct RescheduleService<Card: FSRSCard> {
         due: Date? = nil
     ) throws -> RecordLogItem<Card> {
         logger?.debug("Manual rating: state=\(state)")
-        
+
         if state == .new {
             let log = ReviewLog(
                 rating: .manual,
@@ -56,7 +56,7 @@ public struct RescheduleService<Card: FSRSCard> {
                 learningSteps: card.learningSteps,
                 review: reviewed
             )
-            
+
             // Direct property mutation
             var nextCard = card
             nextCard.due = reviewed
@@ -68,15 +68,15 @@ public struct RescheduleService<Card: FSRSCard> {
             nextCard.lapses = 0
             nextCard.state = .new
             nextCard.lastReview = reviewed
-            
+
             return RecordLogItem(card: nextCard, log: log)
         } else {
             guard let due = due else {
                 throw FSRSError.invalidParameter("reschedule: due is required for manual rating")
             }
-            
+
             let scheduledDays = Int(dateDiff(now: due, previous: reviewed, unit: CalculationTimeUnit.days))
-            
+
             let log = ReviewLog(
                 rating: .manual,
                 state: card.state,
@@ -87,7 +87,7 @@ public struct RescheduleService<Card: FSRSCard> {
                 learningSteps: card.learningSteps,
                 review: reviewed
             )
-            
+
             // Direct property mutation
             var nextCard = card
             nextCard.state = state
@@ -97,11 +97,11 @@ public struct RescheduleService<Card: FSRSCard> {
             nextCard.difficulty = difficulty ?? card.difficulty
             nextCard.scheduledDays = scheduledDays
             nextCard.reps += 1
-            
+
             return RecordLogItem(card: nextCard, log: log)
         }
     }
-    
+
     /// Reschedule card based on review history
     /// - Parameters:
     ///   - currentCard: Initial card state
@@ -110,9 +110,9 @@ public struct RescheduleService<Card: FSRSCard> {
     /// - Throws: FSRSError if any operation fails
     public func reschedule(currentCard: Card, reviews: [FSRSHistory]) throws -> [RecordLogItem<Card>] {
         logger?.debug("Starting reschedule with \(reviews.count) reviews")
-        
+
         var collections: [RecordLogItem<Card>] = []
-        
+
         // Create empty card from currentCard
         var curCard = currentCard
         curCard.stability = 0
@@ -123,16 +123,16 @@ public struct RescheduleService<Card: FSRSCard> {
         curCard.lapses = 0
         curCard.state = .new
         curCard.lastReview = nil
-        
+
         for (index, review) in reviews.enumerated() {
             guard let reviewDateValue = review.review else {
                 continue
             }
-            
+
             logger?.info("Processing review #\(index + 1): rating=\(review.rating?.rawValue ?? 0), date=\(reviewDateValue)")
-            
+
             var item: RecordLogItem<Card>
-            
+
             if review.rating == .manual {
                 item = try handleManualRating(
                     card: curCard,
@@ -147,14 +147,14 @@ public struct RescheduleService<Card: FSRSCard> {
             } else {
                 continue
             }
-            
+
             collections.append(item)
             curCard = item.card
         }
-        
+
         return collections
     }
-    
+
     /// Calculate manual record for rescheduling
     /// - Parameters:
     ///   - currentCard: Current card state
@@ -172,24 +172,24 @@ public struct RescheduleService<Card: FSRSCard> {
         guard let recordLogItem = recordLogItem else {
             return nil
         }
-        
+
         let rescheduleCard = recordLogItem.card
-        
+
         // If cards are the same, return nil
         if currentCard.due.timeIntervalSince1970 == rescheduleCard.due.timeIntervalSince1970 {
             logger?.debug("Calculating manual record: no changes needed")
             return nil
         }
-        
+
         var updatedCard = currentCard
         updatedCard.scheduledDays = Int(dateDiff(
             now: rescheduleCard.due,
             previous: currentCard.due,
             unit: CalculationTimeUnit.days
         ))
-        
+
         logger?.debug("Calculating manual record: scheduledDays=\(updatedCard.scheduledDays), updateMemory=\(updateMemory)")
-        
+
         return try handleManualRating(
             card: updatedCard,
             state: rescheduleCard.state,
@@ -207,25 +207,25 @@ public struct RescheduleService<Card: FSRSCard> {
 public struct RescheduleOptions<Card: FSRSCard> {
     /// Optional handler to transform each record log item
     public var recordLogHandler: ((RecordLogItem<Card>) -> RecordLogItem<Card>)?
-    
+
     /// Optional handler to transform the final manual item
     public var recordLogItemHandler: ((RecordLogItem<Card>) -> RecordLogItem<Card>)?
-    
+
     /// Optional custom sort order for reviews
     public var reviewsOrderBy: ((FSRSHistory, FSRSHistory) -> Bool)?
-    
+
     /// Whether to skip manual reviews (default: true)
     public var skipManual: Bool = true
-    
+
     /// Whether to update memory state (stability/difficulty) (default: false)
     public var updateMemoryState: Bool = false
-    
+
     /// Current time (defaults to now)
     public var now: Date?
-    
+
     /// Optional starting card state (defaults to empty card)
     public var firstCard: Card?
-    
+
     public init(
         recordLogHandler: ((RecordLogItem<Card>) -> RecordLogItem<Card>)? = nil,
         recordLogItemHandler: ((RecordLogItem<Card>) -> RecordLogItem<Card>)? = nil,
@@ -249,10 +249,10 @@ public struct RescheduleOptions<Card: FSRSCard> {
 public struct RescheduleResult<Card: FSRSCard> {
     /// Collection of all record log items from replaying history
     public var collections: [RecordLogItem<Card>]
-    
+
     /// Optional manual reschedule item for current state
     public var rescheduleItem: RecordLogItem<Card>?
-    
+
     public init(
         collections: [RecordLogItem<Card>],
         rescheduleItem: RecordLogItem<Card>?

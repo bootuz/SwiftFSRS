@@ -30,9 +30,6 @@ public enum Rating: Int, Codable, CaseIterable, Sendable {
     }
 }
 
-/// Grade type excludes Manual rating
-public typealias Grade = Rating
-
 /// Time unit for calculations
 public enum TimeUnit: String, Codable, Sendable {
     case minutes = "m"
@@ -94,6 +91,3 @@ extension StepUnit: ExpressibleByStringLiteral {
         }
     }
 }
-
-/// All valid grades (excluding Manual)
-public let Grades: [Grade] = [.again, .hard, .good, .easy]

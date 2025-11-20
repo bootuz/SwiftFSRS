@@ -25,7 +25,7 @@ public let DIFFICULTY_CENTER_POINT: Double = 11.0
 
 // MARK: - Grade Constants
 
-/// Neutral grade value (Good rating = 3)
+/// Neutral rating value (Good rating = 3)
 public let GRADE_NEUTRAL_VALUE: Double = 3.0
 
 // MARK: - Time Conversion Constants

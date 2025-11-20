@@ -7,7 +7,7 @@ public protocol ParameterValidator {
     /// - Returns: Validated parameters array
     /// - Throws: FSRSError if parameters are invalid
     func validate(_ parameters: [Double]) throws -> [Double]
-    
+
     /// Clip parameters to valid bounds
     /// - Parameters:
     ///   - parameters: Parameters array to clip
@@ -41,20 +41,20 @@ public protocol ParameterMigrator {
 
 public struct DefaultParameterValidator: ParameterValidator {
     public init() {}
-    
+
     public func validate(_ parameters: [Double]) throws -> [Double] {
         let invalid = parameters.first { !$0.isFinite || $0.isNaN }
         if let invalidValue = invalid {
             throw FSRSError.invalidParameter("Non-finite or NaN value in parameters: \(invalidValue)")
         }
-        
+
         if ![17, 19, 21].contains(parameters.count) {
             throw FSRSError.invalidParameter("Invalid parameter length: \(parameters.count). Must be 17, 19 or 21 for FSRSv4, 5 and 6 respectively.")
         }
-        
+
         return parameters
     }
-    
+
     public func clip(_ parameters: [Double], bounds: [(Double, Double)]) -> [Double] {
         var result: [Double] = []
         for (index, param) in parameters.enumerated() {
@@ -71,11 +71,11 @@ public struct DefaultParameterValidator: ParameterValidator {
 
 public struct DefaultParameterMigrator: ParameterMigrator {
     private let validator: ParameterValidator
-    
+
     public init(validator: ParameterValidator = DefaultParameterValidator()) {
         self.validator = validator
     }
-    
+
     public func migrate(
         parameters: [Double]?,
         numRelearningSteps: Int = 0,
@@ -84,7 +84,7 @@ public struct DefaultParameterMigrator: ParameterMigrator {
         guard let params = parameters else {
             return Array(defaultW)
         }
-        
+
         switch params.count {
         case 21:
             return clipParameters(
@@ -93,9 +93,9 @@ public struct DefaultParameterMigrator: ParameterMigrator {
                 enableShortTerm: enableShortTerm,
                 validator: validator
             )
-            
+
         case 19:
-            print("[FSRS-6] auto fill w from 19 to 21 length")
+            print("[FSRS-6] auto fill weights from 19 to 21 length")
             var clipped = clipParameters(
                 parameters: Array(params),
                 numRelearningSteps: numRelearningSteps,
@@ -105,30 +105,30 @@ public struct DefaultParameterMigrator: ParameterMigrator {
             clipped.append(0.0)
             clipped.append(FSRS5_DEFAULT_DECAY)
             return clipped
-            
+
         case 17:
-            var w = clipParameters(
+            var weights = clipParameters(
                 parameters: Array(params),
                 numRelearningSteps: numRelearningSteps,
                 enableShortTerm: enableShortTerm,
                 validator: validator
             )
-            w[4] = roundToFixed(w[5] * 2.0 + w[4])
-            w[5] = roundToFixed(log(w[5] * 3.0 + 1.0) / 3.0)
-            w[6] = roundToFixed(w[6] + 0.5)
-            print("[FSRS-6] auto fill w from 17 to 21 length")
-            w.append(0.0)
-            w.append(0.0)
-            w.append(0.0)
-            w.append(FSRS5_DEFAULT_DECAY)
-            return w
-            
+            weights[4] = roundToFixed(weights[5] * 2.0 + weights[4])
+            weights[5] = roundToFixed(log(weights[5] * 3.0 + 1.0) / 3.0)
+            weights[6] = roundToFixed(weights[6] + 0.5)
+            print("[FSRS-6] auto fill weights from 17 to 21 length")
+            weights.append(0.0)
+            weights.append(0.0)
+            weights.append(0.0)
+            weights.append(FSRS5_DEFAULT_DECAY)
+            return weights
+
         default:
             print("[FSRS] Invalid parameters length, using default parameters")
             return Array(defaultW)
         }
     }
-    
+
     private func clipParameters(
         parameters: [Double],
         numRelearningSteps: Int,
@@ -136,22 +136,22 @@ public struct DefaultParameterMigrator: ParameterMigrator {
         validator: ParameterValidator
     ) -> [Double] {
         var w17W18Ceiling = W17_W18_Ceiling
-        
+
         if max(0, numRelearningSteps) > 1 {
             let value = -(
                 log(parameters[11]) +
                 log(pow(2.0, parameters[13]) - 1.0) +
                 parameters[14] * 0.3
             ) / Double(numRelearningSteps)
-            
+
             w17W18Ceiling = clamp(value, min: 0.01, max: 2.0)
         }
-        
+
         let bounds = clampParameters(
             w17W18Ceiling: w17W18Ceiling,
             enableShortTerm: enableShortTerm
         )
-        
+
         return validator.clip(parameters, bounds: bounds)
     }
 }
@@ -159,26 +159,26 @@ public struct DefaultParameterMigrator: ParameterMigrator {
 /// Default parameter generator implementation
 public struct DefaultParameterGenerator: ParameterGenerator {
     private let migrator: ParameterMigrator
-    
+
     public init(migrator: ParameterMigrator = DefaultParameterMigrator()) {
         self.migrator = migrator
     }
-    
+
     public func generate(from props: PartialFSRSParameters) -> FSRSParameters {
         let learningSteps = props.learningSteps ?? defaultLearningSteps
         let relearningSteps = props.relearningSteps ?? defaultRelearningSteps
         let enableShortTerm = props.enableShortTerm ?? defaultEnableShortTerm
-        
-        let w = migrator.migrate(
-            parameters: props.w,
+
+        let weights = migrator.migrate(
+            parameters: props.weights,
             numRelearningSteps: relearningSteps.count,
             enableShortTerm: enableShortTerm
         )
-        
+
         return FSRSParameters(
             requestRetention: props.requestRetention ?? defaultRequestRetention,
             maximumInterval: props.maximumInterval ?? defaultMaximumInterval,
-            w: w,
+            weights: weights,
             enableFuzz: props.enableFuzz ?? defaultEnableFuzz,
             enableShortTerm: enableShortTerm,
             learningSteps: learningSteps,

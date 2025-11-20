@@ -5,7 +5,7 @@ import Foundation
 public struct RetrievabilityService {
     private let algorithm: any FSRSAlgorithmProtocol
     private let logger: (any FSRSLogger)?
-    
+
     /// Initialize retrievability service
     /// - Parameters:
     ///   - algorithm: FSRS algorithm instance
@@ -17,9 +17,9 @@ public struct RetrievabilityService {
         self.algorithm = algorithm
         self.logger = logger
     }
-    
+
     // MARK: - Public API
-    
+
     /// Get retrievability as a numeric value (0.0 to 1.0)
     ///
     /// - Parameters:
@@ -28,27 +28,27 @@ public struct RetrievabilityService {
     /// - Returns: Retrievability value between 0.0 and 1.0
     public func getRetrievabilityValue<Card: FSRSCard>(card: Card, now: Date? = nil) -> Double {
         let currentTime = now ?? Date()
-        
+
         // New cards have zero retrievability
         guard card.state != .new else {
             logger?.info("Retrievability for new card: 0.0")
             return 0.0
         }
-        
+
         // Cards without a last review have zero retrievability
         guard let lastReview = card.lastReview else {
             logger?.info("Retrievability for card without last review: 0.0")
             return 0.0
         }
-        
+
         // Calculate elapsed days and retrievability
         let elapsedDays = max(
             dateDiff(now: currentTime, previous: lastReview, unit: CalculationTimeUnit.days),
             0.0
         )
-        
+
         let retrievability = algorithm.forgettingCurve(elapsedDays, card.stability)
-        
+
         logger?.info("""
             Retrievability calculated: \
             state=\(card.state), \
@@ -56,10 +56,10 @@ public struct RetrievabilityService {
             stability=\(card.stability) -> \
             retrievability=\(retrievability)
             """)
-        
+
         return retrievability
     }
-    
+
     /// Get retrievability formatted as a percentage string
     ///
     /// - Parameters:

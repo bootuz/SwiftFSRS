@@ -7,7 +7,6 @@
         "**/.build": true,
         "**/DerivedData": true
     },    
-    "swiftlint.onlyEnableOnSwiftPMProjects": true,
     "swiftlint.autoLintWorkspace": true,
     "swiftlint.additionalParameters": ["--fix"],
 }

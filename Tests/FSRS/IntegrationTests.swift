@@ -6,7 +6,7 @@ import Testing
 /// Integration tests for real-world FSRS usage scenarios
 @Suite("Integration Tests")
 struct IntegrationTests {
-    // MARK: - Helper Functions
+	// MARK: - Helper Functions
 
     private func createFSRS(enableFuzz: Bool = false) -> FSRS<TestCard> {
         let params = PartialFSRSParameters(
@@ -25,18 +25,18 @@ struct IntegrationTests {
 
     @Test("Consistent study schedule over multiple days")
     func testConsistentStudySchedule() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         var card = createCard()
         var now = Date()
 
         // Day 1: First review
-        var result = try f.next(card: card, now: now, grade: .good)
+        var result = try fsrs.next(card: card, now: now, rating: .good)
         card = result.card
         #expect(card.reps == 1)
 
         // Day 2: Second review
         now = try #require(Calendar.current.date(byAdding: .day, value: 1, to: now))
-        result = try f.next(card: card, now: now, grade: .good)
+        result = try fsrs.next(card: card, now: now, rating: .good)
         card = result.card
         #expect(card.reps == 2)
 
@@ -50,7 +50,7 @@ struct IntegrationTests {
                 now = try #require(Calendar.current.date(byAdding: .day, value: 1, to: now))
             }
 
-            result = try f.next(card: card, now: now, grade: .good)
+            result = try fsrs.next(card: card, now: now, rating: .good)
             card = result.card
             #expect(card.reps == i)
         }
@@ -63,18 +63,18 @@ struct IntegrationTests {
 
     @Test("Student struggles with difficult card")
     func testDifficultCardScenario() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         var card = createCard()
         var now = Date()
 
         // Multiple failed attempts
         for _ in 0..<3 {
-            var result = try f.next(card: card, now: now, grade: .again)
+            var result = try fsrs.next(card: card, now: now, rating: .again)
             card = result.card
 
             // Try again after some time
             now = try #require(Calendar.current.date(byAdding: .hour, value: 1, to: now))
-            result = try f.next(card: card, now: now, grade: .hard)
+            result = try fsrs.next(card: card, now: now, rating: .hard)
             card = result.card
 
             now = try #require(Calendar.current.date(byAdding: .day, value: 1, to: now))
@@ -87,13 +87,13 @@ struct IntegrationTests {
 
     @Test("Student masters easy card quickly")
     func testEasyCardScenario() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         var card = createCard()
         var now = Date()
 
         // Consistently rate as easy
         for _ in 0..<5 {
-            let result = try f.next(card: card, now: now, grade: .easy)
+            let result = try fsrs.next(card: card, now: now, rating: .easy)
             card = result.card
 
             if card.scheduledDays > 0 {
@@ -112,29 +112,29 @@ struct IntegrationTests {
 
     @Test("Forgetting and relearning cycle")
     func testForgettingAndRelearning() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         var card = createCard()
         var now = Date()
 
         // Learn the card
-        var result = try f.next(card: card, now: now, grade: .good)
+        var result = try fsrs.next(card: card, now: now, rating: .good)
         card = result.card
 
         // Graduate to review
         now = try #require(Calendar.current.date(byAdding: .day, value: 1, to: now))
-        result = try f.next(card: card, now: now, grade: .easy)
+        result = try fsrs.next(card: card, now: now, rating: .easy)
         card = result.card
         #expect(card.state == .review)
 
         // Forget the card
         now = try #require(Calendar.current.date(byAdding: .day, value: 30, to: now))
-        result = try f.next(card: card, now: now, grade: .again)
+        result = try fsrs.next(card: card, now: now, rating: .again)
         card = result.card
         #expect(card.state == .relearning || card.state == .review)
         #expect(card.lapses >= 1)
 
         // Relearn successfully
-        result = try f.next(card: card, now: now, grade: .good)
+        result = try fsrs.next(card: card, now: now, rating: .good)
         card = result.card
 
         // Verify recovery
@@ -143,7 +143,7 @@ struct IntegrationTests {
 
     @Test("Long-term retention scenario (1 year)")
     func testLongTermRetention() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         var card = createCard()
         var now = Date()
 
@@ -151,7 +151,7 @@ struct IntegrationTests {
         var totalDays = 0
 
         while totalDays < 365 && card.reps < 20 {
-            let result = try f.next(card: card, now: now, grade: .good)
+            let result = try fsrs.next(card: card, now: now, rating: .good)
             card = result.card
 
             let daysToAdd = max(1, card.scheduledDays)
@@ -166,13 +166,13 @@ struct IntegrationTests {
 
     @Test("Cramming vs spaced repetition")
     func testCrammingVsSpacedRepetition() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
 
         // Cramming: Review many times in one day
         var cramCard = createCard()
         let cramDate = Date()
         for _ in 1...10 {
-            let result = try f.next(card: cramCard, now: cramDate, grade: .good)
+            let result = try fsrs.next(card: cramCard, now: cramDate, rating: .good)
             cramCard = result.card
         }
 
@@ -180,7 +180,7 @@ struct IntegrationTests {
         var spacedCard = createCard()
         var spacedDate = Date()
         for _ in 1...10 {
-            let result = try f.next(card: spacedCard, now: spacedDate, grade: .good)
+            let result = try fsrs.next(card: spacedCard, now: spacedDate, rating: .good)
             spacedCard = result.card
 
             if spacedCard.scheduledDays > 0 {
@@ -201,7 +201,7 @@ struct IntegrationTests {
 
     @Test("Review multiple cards in session")
     func testBatchReviewSession() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let now = Date()
 
         var cards = [
@@ -209,14 +209,14 @@ struct IntegrationTests {
             TestCard(question: "Q2", answer: "A2"),
             TestCard(question: "Q3", answer: "A3"),
             TestCard(question: "Q4", answer: "A4"),
-            TestCard(question: "Q5", answer: "A5"),
+            TestCard(question: "Q5", answer: "A5")
         ]
 
         let grades: [Rating] = [.easy, .good, .hard, .good, .easy]
 
         // Review all cards
         for i in 0..<cards.count {
-            let result = try f.next(card: cards[i], now: now, grade: grades[i])
+            let result = try fsrs.next(card: cards[i], now: now, rating: grades[i])
             cards[i] = result.card
         }
 
@@ -229,19 +229,19 @@ struct IntegrationTests {
 
     @Test("Preview all cards before review")
     func testPreviewAllCardsBeforeReview() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let now = Date()
 
         let cards = [
             TestCard(question: "Q1", answer: "A1"),
             TestCard(question: "Q2", answer: "A2"),
-            TestCard(question: "Q3", answer: "A3"),
+            TestCard(question: "Q3", answer: "A3")
         ]
 
         // Preview each card
         var previews: [RecordLog<TestCard>] = []
         for card in cards {
-            let preview = try f.repeat(card: card, now: now)
+            let preview = try fsrs.repeat(card: card, now: now)
             previews.append(preview)
         }
 
@@ -255,19 +255,19 @@ struct IntegrationTests {
 
     @Test("Undo review with rollback")
     func testUndoReview() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let originalCard = createCard()
         let now = Date()
 
         // Perform review
-        let result = try f.next(card: originalCard, now: now, grade: .hard)
+        let result = try fsrs.next(card: originalCard, now: now, rating: .hard)
         let updatedCard = result.card
 
         #expect(updatedCard.reps == 1)
         #expect(updatedCard.stability > 0)
 
         // Undo review
-        let rolledBackCard = try f.rollback(card: updatedCard, log: result.log)
+        let rolledBackCard = try fsrs.rollback(card: updatedCard, log: result.log)
 
         #expect(rolledBackCard.state == originalCard.state)
         #expect(rolledBackCard.reps == originalCard.reps)
@@ -276,7 +276,7 @@ struct IntegrationTests {
 
     @Test("Multiple undo operations")
     func testMultipleUndoOperations() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         var card = createCard()
         var now = Date()
         var logs: [ReviewLog] = []
@@ -284,7 +284,7 @@ struct IntegrationTests {
 
         // Perform multiple reviews
         for _ in 0..<5 {
-            let result = try f.next(card: card, now: now, grade: .good)
+            let result = try fsrs.next(card: card, now: now, rating: .good)
             logs.append(result.log)
             card = result.card
             cardStates.append(card)
@@ -296,7 +296,7 @@ struct IntegrationTests {
 
         // Undo all reviews in reverse order
         for i in stride(from: logs.count - 1, through: 0, by: -1) {
-            card = try f.rollback(card: card, log: logs[i])
+            card = try fsrs.rollback(card: card, log: logs[i])
             #expect(card.reps == i)
         }
 
@@ -308,7 +308,7 @@ struct IntegrationTests {
 
     @Test("Import existing card with history")
     func testImportExistingCard() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let now = Date()
 
         // Create a card as if it was imported from another system
@@ -326,7 +326,7 @@ struct IntegrationTests {
         )
 
         // Continue using the card
-        let result = try f.next(card: importedCard, now: now, grade: .good)
+        let result = try fsrs.next(card: importedCard, now: now, rating: .good)
 
         #expect(result.card.reps == 6)
         #expect(result.card.stability >= importedCard.stability)
@@ -334,7 +334,7 @@ struct IntegrationTests {
 
     @Test("Reset card completely with forget")
     func testResetCardCompletely() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let now = Date()
 
         // Create a mature card
@@ -350,7 +350,7 @@ struct IntegrationTests {
         )
 
         // Reset the card
-        let result = f.forget(card: matureCard, now: now, resetCount: true)
+        let result = fsrs.forget(card: matureCard, now: now, resetCount: true)
 
         #expect(result.card.state == .new)
         #expect(result.card.stability == 0)
@@ -363,7 +363,7 @@ struct IntegrationTests {
 
     @Test("Review card with future due date")
     func testFutureDueDateReview() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let now = Date()
         let futureDate = try #require(Calendar.current.date(byAdding: .day, value: 10, to: now))
 
@@ -379,13 +379,13 @@ struct IntegrationTests {
         )
 
         // Should still allow review
-        let result = try f.next(card: card, now: now, grade: .good)
+        let result = try fsrs.next(card: card, now: now, rating: .good)
         #expect(result.card.reps == 4)
     }
 
     @Test("Review card with very old due date")
     func testVeryOldDueDateReview() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let now = Date()
         let oldDate = try #require(Calendar.current.date(byAdding: .day, value: -365, to: now))
 
@@ -402,19 +402,19 @@ struct IntegrationTests {
         )
 
         // Should handle very overdue cards
-        let result = try f.next(card: card, now: now, grade: .again)
+        let result = try fsrs.next(card: card, now: now, rating: .again)
         #expect(result.card.lapses == 1)
     }
 
     @Test("Concurrent reviews of same card (copy)")
     func testConcurrentReviews() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let originalCard = createCard()
         let now = Date()
 
         // Simulate two different review paths
-        let result1 = try f.next(card: originalCard, now: now, grade: .good)
-        let result2 = try f.next(card: originalCard, now: now, grade: .easy)
+        let result1 = try fsrs.next(card: originalCard, now: now, rating: .good)
+        let result2 = try fsrs.next(card: originalCard, now: now, rating: .easy)
 
         // Both should be valid but different
         #expect(result1.card.reps == 1)
@@ -426,16 +426,16 @@ struct IntegrationTests {
 
     @Test("Monitor retrievability over time")
     func testRetrievabilityOverTime() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         let baseDate = Date()
 
         // Create a reviewed card
         var card = createCard()
-        let result = try f.next(card: card, now: baseDate, grade: .good)
+        let result = try fsrs.next(card: card, now: baseDate, rating: .good)
         card = result.card
 
         // Skip to review state
-        let result2 = try f.next(card: card, now: baseDate, grade: .easy)
+        let result2 = try fsrs.next(card: card, now: baseDate, rating: .easy)
         card = result2.card
 
         var previousRetrievability = 1.0
@@ -444,7 +444,7 @@ struct IntegrationTests {
         for days in 1...30 {
             let checkDate = try #require(
                 Calendar.current.date(byAdding: .day, value: days, to: baseDate))
-            let retrievability = f.getRetrievabilityValue(card: card, now: checkDate)
+            let retrievability = fsrs.getRetrievabilityValue(card: card, now: checkDate)
 
             // Should decrease over time
             #expect(retrievability <= previousRetrievability)
@@ -457,22 +457,22 @@ struct IntegrationTests {
 
     @Test("Optimal review timing based on retrievability")
     func testOptimalReviewTiming() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         var card = createCard()
         let now = Date()
 
         // Review to get to review state
-        var result = try f.next(card: card, now: now, grade: .good)
+        var result = try fsrs.next(card: card, now: now, rating: .good)
         card = result.card
 
-        result = try f.next(card: card, now: now, grade: .easy)
+        result = try fsrs.next(card: card, now: now, rating: .easy)
         card = result.card
 
         guard card.state == .review else { return }
 
         // Check retrievability at scheduled due date
         let dueDate = card.due
-        let retrievabilityAtDue = f.getRetrievabilityValue(card: card, now: dueDate)
+        let retrievabilityAtDue = fsrs.getRetrievabilityValue(card: card, now: dueDate)
 
         // Should be close to request retention (0.9)
         #expect(retrievabilityAtDue >= 0.8)
@@ -483,7 +483,7 @@ struct IntegrationTests {
 
     @Test("Custom card properties survive full lifecycle")
     func testCustomPropertiesPreservation() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         var card = TestCard(
             question: "Custom Q",
             answer: "Custom A",
@@ -494,7 +494,7 @@ struct IntegrationTests {
 
         // Multiple reviews
         for _ in 0..<5 {
-            let result = try f.next(card: card, now: now, grade: .good)
+            let result = try fsrs.next(card: card, now: now, rating: .good)
             card = result.card
 
             // Verify custom properties
@@ -511,14 +511,14 @@ struct IntegrationTests {
 
     @Test("Handle large number of reviews")
     func testLargeNumberOfReviews() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         var card = createCard()
         var now = Date()
 
         // Perform many reviews
         for i in 1...100 {
-            let grade: Rating = i % 4 == 0 ? .again : .good
-            let result = try f.next(card: card, now: now, grade: grade)
+            let rating: Rating = i % 4 == 0 ? .again : .good
+            let result = try fsrs.next(card: card, now: now, rating: rating)
             card = result.card
 
             now = try #require(Calendar.current.date(byAdding: .hour, value: 1, to: now))
@@ -532,13 +532,13 @@ struct IntegrationTests {
 
     @Test("Rapid successive reviews")
     func testRapidSuccessiveReviews() throws {
-        let f = createFSRS()
+        let fsrs = createFSRS()
         var card = createCard()
         let now = Date()
 
         // Review multiple times at the exact same time
         for _ in 0..<10 {
-            let result = try f.next(card: card, now: now, grade: .good)
+            let result = try fsrs.next(card: card, now: now, rating: .good)
             card = result.card
         }
 

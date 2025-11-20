@@ -21,22 +21,22 @@ public protocol SchedulerProtocol<Card> {
     var algorithm: any FSRSAlgorithmProtocol { get }
 
     /// Handle new state
-    /// - Parameter grade: Grade rating
+    /// - Parameter rating: Grade rating
     /// - Returns: Record log item
     /// - Throws: FSRSError if any operation fails
-    func newState(grade: Rating) throws -> RecordLogItem<Card>
+    func newState(rating: Rating) throws -> RecordLogItem<Card>
 
     /// Handle learning/relearning state
-    /// - Parameter grade: Grade rating
+    /// - Parameter rating: Grade rating
     /// - Returns: Record log item
     /// - Throws: FSRSError if any operation fails
-    func learningState(grade: Rating) throws -> RecordLogItem<Card>
+    func learningState(rating: Rating) throws -> RecordLogItem<Card>
 
     /// Handle review state
-    /// - Parameter grade: Grade rating
+    /// - Parameter rating: Grade rating
     /// - Returns: Record log item
     /// - Throws: FSRSError if any operation fails
-    func reviewState(grade: Rating) throws -> RecordLogItem<Card>
+    func reviewState(rating: Rating) throws -> RecordLogItem<Card>
 
     /// Build review log
     /// - Parameter rating: Rating
@@ -46,12 +46,12 @@ public protocol SchedulerProtocol<Card> {
 
 /// Default implementations for SchedulerProtocol
 extension SchedulerProtocol {
-    /// Check if grade is valid
-    /// - Parameter grade: Grade to check
-    /// - Throws: FSRSError if grade is invalid
-    public func checkGrade(_ grade: Rating) throws {
-        guard (1...4).contains(grade.rawValue) else {
-            throw FSRSError.invalidGrade("Invalid grade: \(grade)")
+    /// Check if rating is valid
+    /// - Parameter rating: Grade to check
+    /// - Throws: FSRSError if rating is invalid
+    public func checkGrade(_ rating: Rating) throws {
+        guard (1...4).contains(rating.rawValue) else {
+            throw FSRSError.invalidGrade("Invalid rating: \(rating)")
         }
     }
 
@@ -60,27 +60,27 @@ extension SchedulerProtocol {
     /// - Throws: FSRSError if any operation fails
     public func preview() throws -> RecordLog<Card> {
         [
-            .again: try review(grade: .again),
-            .hard: try review(grade: .hard),
-            .good: try review(grade: .good),
-            .easy: try review(grade: .easy),
+            .again: try review(rating: .again),
+            .hard: try review(rating: .hard),
+            .good: try review(rating: .good),
+            .easy: try review(rating: .easy)
         ] as RecordLog<Card>
     }
 
-    /// Review with specific grade
-    /// - Parameter grade: Grade rating
+    /// Review with specific rating
+    /// - Parameter rating: Grade rating
     /// - Returns: Record log item
     /// - Throws: FSRSError if any operation fails
-    public func review(grade: Rating) throws -> RecordLogItem<Card> {
-        try checkGrade(grade)
+    public func review(rating: Rating) throws -> RecordLogItem<Card> {
+        try checkGrade(rating)
 
         switch last.state {
         case .new:
-            return try newState(grade: grade)
+            return try newState(rating: rating)
         case .learning, .relearning:
-            return try learningState(grade: grade)
+            return try learningState(rating: rating)
         case .review:
-            return try reviewState(grade: grade)
+            return try reviewState(rating: rating)
         }
     }
 
