@@ -1,12 +1,13 @@
 {
     "swift.sourcekit-lsp.backgroundIndexing": "on",
     "editor.codeActionsOnSave": {
-        "source.fixAll": "explicit"
+        "source.fixAll": "always"
     },
     "files.exclude": {
         "**/.build": true,
         "**/DerivedData": true
     },    
     "swiftlint.autoLintWorkspace": true,
-    "swiftlint.additionalParameters": ["--fix"],
+    "swiftlint.configFile": ".swiftlint.yml",
+    "swiftlint.onlyEnableOnSwiftPMProjects": true
 }
