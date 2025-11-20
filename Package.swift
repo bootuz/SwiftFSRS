@@ -15,7 +15,7 @@ let package = Package(
         .library(
             name: "FSRS",
             targets: ["FSRS"]
-        )
+        ),
     ],
     dependencies: [
         .package(url: "https://github.com/realm/SwiftLint.git", from: "0.62.2")
@@ -27,7 +27,7 @@ let package = Package(
             path: "Sources/FSRS",
             plugins: [
                 .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLint")
-            ]
+            ],
         ),
         .testTarget(
             name: "FSRSTests",

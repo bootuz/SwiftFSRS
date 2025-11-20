@@ -6,6 +6,10 @@ public struct RetrievabilityService {
     private let algorithm: any FSRSAlgorithmProtocol
     private let logger: (any FSRSLogger)?
     
+    /// Initialize retrievability service
+    /// - Parameters:
+    ///   - algorithm: FSRS algorithm instance
+    ///   - logger: Optional logger for debugging
     public init(
         algorithm: any FSRSAlgorithmProtocol,
         logger: (any FSRSLogger)? = nil

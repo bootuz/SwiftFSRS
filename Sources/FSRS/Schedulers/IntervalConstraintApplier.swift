@@ -2,7 +2,7 @@ import Foundation
 
 /// Applies interval constraints to ensure proper ordering of intervals
 /// Ensures: Again < Hard < Good < Easy
-public struct IntervalConstraintApplier {
+public enum IntervalConstraintApplier {
     /// Apply constraints to intervals for a new card
     ///
     /// - Parameters:

@@ -1,7 +1,13 @@
 {
-    "swift.lint.enabled": true,
-    "swift.lint.path": "/usr/local/bin/swiftlint",
+    "swift.sourcekit-lsp.backgroundIndexing": "on",
     "editor.codeActionsOnSave": {
-        "source.fixAll.swift": "explicit"
-    }
+        "source.fixAll": "explicit"
+    },
+    "files.exclude": {
+        "**/.build": true,
+        "**/DerivedData": true
+    },    
+    "swiftlint.onlyEnableOnSwiftPMProjects": true,
+    "swiftlint.autoLintWorkspace": true,
+    "swiftlint.additionalParameters": ["--fix"],
 }

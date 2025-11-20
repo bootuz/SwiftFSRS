@@ -211,45 +211,60 @@ open class BaseScheduler<Card: FSRSCard>: SchedulerProtocol {
 
     /// Schedule a new card
     /// Must be overridden by subclasses
-    open func scheduleNewCard(grade: Rating) throws -> RecordLogItem<Card> {
+    open func scheduleNewCard(grade: Rating) throws -> RecordLogItem<Card> { // swiftlint:disable unavailable_function
         fatalError("Must override scheduleNewCard in subclass")
     }
 
     /// Schedule a learning/relearning card
     /// Must be overridden by subclasses
-    open func scheduleLearningCard(grade: Rating) throws -> RecordLogItem<Card> {
+    open func scheduleLearningCard(grade: Rating) throws -> RecordLogItem<Card> { // swiftlint:disable unavailable_function
         fatalError("Must override scheduleLearningCard in subclass")
     }
 
     /// Schedule a review card
     /// Must be overridden by subclasses
-    open func scheduleReviewCard(grade: Rating) throws -> RecordLogItem<Card> {
+    open func scheduleReviewCard(grade: Rating) throws -> RecordLogItem<Card> { // swiftlint:disable unavailable_function
         fatalError("Must override scheduleReviewCard in subclass")
     }
 }
-
 // MARK: - SchedulerProtocol Implementation
 
-extension BaseScheduler {
-    public var last: Card { lastCard }
-    public var current: Card {
+/// Expose properties and methods required by SchedulerProtocol
+public extension BaseScheduler {
+    /// Last card state (before review)
+    var last: Card { lastCard }
+    /// Current card state (after review)
+    var current: Card {
         get { currentCard }
         set { currentCard = newValue }
     }
 
-    public var elapsedDays: Double {
+    /// Days elapsed since last review
+    var elapsedDays: Double {
         elapsedDaysValue.value
     }
 
-    public func newState(grade: Rating) throws -> RecordLogItem<Card> {
+    /// Schedule new state based on grade
+    /// - Parameter grade: Rating given
+    /// - Throws: Error if scheduling fails
+    /// - Returns: Record log item with updated card state
+    func newState(grade: Rating) throws -> RecordLogItem<Card> {
         try scheduleNewCard(grade: grade)
     }
 
-    public func learningState(grade: Rating) throws -> RecordLogItem<Card> {
+    /// Schedule learning/relearning state based on grade
+    /// - Parameter grade: Rating given
+    /// - Throws: Error if scheduling fails
+    /// - Returns: Record log item with updated card state
+    func learningState(grade: Rating) throws -> RecordLogItem<Card> {
         try scheduleLearningCard(grade: grade)
     }
 
-    public func reviewState(grade: Rating) throws -> RecordLogItem<Card> {
+    /// Schedule review state based on grade
+    /// - Parameter grade: Rating given
+    /// - Throws: Error if scheduling fails
+    /// - Returns: Record log item with updated card state
+    func reviewState(grade: Rating) throws -> RecordLogItem<Card> {
         try scheduleReviewCard(grade: grade)
     }
 }
